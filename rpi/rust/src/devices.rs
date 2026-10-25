@@ -1,24 +1,32 @@
 use std::io;
 
+#[cfg(target_os = "linux")]
+use alsa::pcm::{Access, Format, HwParams};
+#[cfg(target_os = "linux")]
+use alsa::pcm::PCM;
+
+#[cfg(target_os = "linux")]
+use alsa::{Direction, ValueOr};
+
+use crate::settings::{RATE, BLOCK, CHANNELS};
+
 pub struct MockupPCM;
 
 pub struct MockupIO;
 
-#[cfg(target_os = "linux")]
-use alsa::pcm::PCM;
 
 #[cfg(not(target_os = "linux"))]
 use MockupPCM as PCM;
 
 #[cfg(target_os = "linux")]
-fn initialize_pcm() -> Result<PCM, Box<dyn std::error::Error>> {
+pub fn initialize_pcm() -> Result<PCM, Box<dyn std::error::Error>> {
 
     // Open PCM5102A
     let pcm = PCM::new("plughw:1,0", Direction::Playback, false)?;
 
     // Configure ALSA
     let hwp = HwParams::any(&pcm)?;
-    hwp.set_channels(2)?;
+    hwp.set_channels(CHANNELS)?;
     hwp.set_rate(RATE, ValueOr::Nearest)?;
     hwp.set_format(Format::s16())?;
     hwp.set_access(Access::RWInterleaved)?;

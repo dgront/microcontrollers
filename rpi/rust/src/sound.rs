@@ -1,4 +1,5 @@
 mod devices;
+mod settings;
 
 #[cfg(target_os = "linux")]
 use alsa::pcm::{Access, Format, HwParams, PCM};
@@ -26,7 +27,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 
     const BLOCKS_PER_NOTE: usize = 24;
-    const BLOCK: usize = 1024;
 
     // A natural minor scale: A B C D E F G A
     let notes = [
@@ -40,14 +40,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Generate 440 Hz stereo sine wave
     //    let mut samples = Vec::<i16>::new();
-    let mut samples = [0_i16; BLOCK * 2];
+    let mut samples = [0_i16; settings::BLOCK * 2];
     let mut phase = 0.0_f32;
     let io = pcm.io_i16()?;
     for freq in notes {
-        let phase_step = 2.0 * PI * freq / RATE as f32;
+        let phase_step = 2.0 * PI * freq / settings::RATE as f32;
         for _ in 0..BLOCKS_PER_NOTE {
             // Generate one block
-            println!("n_frames: {:?}", samples.chunks_exact_mut(2));
             for frame in samples.chunks_exact_mut(2) {
                 let value_l = ((phase).sin() * 10000.0) as i16;
                 //                let value_r = (sawtooth(phase, freq, RATE as f32) * 10000.0) as i16;
@@ -58,18 +57,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 phase = (phase + phase_step) % (2.0 * PI);
             }
-            println!("last phase: {}", phase);
+            println!("last phase: {} for note {}", phase, freq);
 
             // Send the block to ALSA
             let mut written = 0;
-            while written < BLOCK {
+            while written < settings::BLOCK {
                 let n = io.writei(&samples[written * 2..])?;
                 if n == 0 { return Err("ALSA writei() returned 0 frames".into()); }
                 written += n;
             }
         }
-        pcm.drain()?;
     }
+    pcm.drain()?;
     Ok(())
 }
 
