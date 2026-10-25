@@ -1,0 +1,13 @@
+Cargo.lock
+.idea/
+pkg/
+target/
+venv-maturin/
+*.dat
+p
+o
+l
+pp
+ll
+oo
+ooo
