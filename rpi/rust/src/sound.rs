@@ -1,11 +1,14 @@
 mod devices;
 mod settings;
+mod notes;
 
 #[cfg(target_os = "linux")]
 use alsa::pcm::{Access, Format, HwParams, PCM};
 #[cfg(target_os = "linux")]
 use alsa::{Direction, ValueOr};
 use std::f32::consts::PI;
+
+use crate::notes::Notes;
 
 const RATE: u32 = 48_000;
 
@@ -29,14 +32,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     const BLOCKS_PER_NOTE: usize = 24;
 
     // A natural minor scale: A B C D E F G A
-    let notes = [
-        440.00, 493.88, 523.25, 587.33,
-        659.25, 698.46, 783.99, 880.00,
-    ];
+    // let notes = [
+    //     440.00, 493.88, 523.25, 587.33,
+    //     659.25, 698.46, 783.99, 880.00,
+    // ];
+
 
     // Open PCM5102A
     let pcm = devices::initialize_pcm()?;
 
+    let notes = notes::Notes::frequencies(Notes::A_MINOR, 4);
 
     // Generate 440 Hz stereo sine wave
     //    let mut samples = Vec::<i16>::new();
