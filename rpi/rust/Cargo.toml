@@ -1,9 +1,10 @@
 [package]
-name = "myproject"
+name = "sound"
 version = "0.1.0"
 edition = "2021"
 
-[dependencies]
+#[dependencies]
+[target.'cfg(target_os = "linux")'.dependencies]
 alsa = "0.9"
 
 [[bin]]
