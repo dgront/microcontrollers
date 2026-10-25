@@ -12,17 +12,21 @@ use crate::notes::Notes;
 
 const RATE: u32 = 48_000;
 
+fn sin(phase: f32) -> f32 { phase.sin() }
 
-fn sawtooth(phase: f32, frequency: f32, rate: f32) -> f32 {
-    let samples_per_period = rate / frequency;
-    return (phase / samples_per_period).fract();
+fn sin_abs(phase: f32) -> f32 { phase.sin().abs() }
+
+fn sin_sqr(phase: f32) -> f32 { 
+    let v = phase.sin().abs();
+    return v*v;
 }
 
-fn rectangular(phase: f32, frequency: f32, rate: f32) -> f32 {
-    let samples_per_period = rate / frequency;
-    let step = ((phase * 2.0)).trunc() as i32;
-    println!("{} {}", phase, step);
-    if step % 2 == 0 { return 1.4; } else { return 0.2; }
+fn sawtooth(phase: f32) -> f32 {
+    return (phase / (2.0*PI)).fract();
+}
+
+fn rectangular(phase: f32) -> f32 {
+    if phase > PI  { return 1.0; } else { return -1.0; }
 }
 
 
@@ -55,7 +59,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         for _ in 0..BLOCKS_PER_NOTE {
             // Generate one block
             for frame in samples.chunks_exact_mut(2) {
-                let value_l = ((phase).sin() * 10000.0) as i16;
+//               let value_l = (sin(phase) * 10000.0) as i16;
+               let value_l = (sin_sqr(phase) * 10000.0) as i16;
+//                let value_l = (sawtooth(phase) * 10000.0) as i16;
+//                let value_l = (rectangular(phase) * 10000.0) as i16;
                 //                let value_r = (sawtooth(phase, freq, RATE as f32) * 10000.0) as i16;
                 //                let value_r = (rectangular(phase, freq, RATE as f32) * 10000.0) as i16;
 
@@ -64,7 +71,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 phase = (phase + phase_step) % (2.0 * PI);
             }
-            println!("last phase: {} for note {}", phase, freq);
 
             // Send the block to ALSA
             let mut written = 0;
