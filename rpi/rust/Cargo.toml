@@ -1,0 +1,15 @@
+[package]
+name = "myproject"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+alsa = "0.9"
+
+[[bin]]
+name = "test"
+path = "./src/test.rs"
+
+[[bin]]
+name = "sound"
+path = "./src/sound.rs"
