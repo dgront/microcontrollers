@@ -57,11 +57,15 @@ impl Notes {
                         note.push(chars.next().unwrap());
                     }
 
-                    result.push(Self::frequency(&note, self.octave));
+                    result.push(self.frequency(&note));
                 }
             }
         }
 
         result
+    }
+
+    pub fn thirds(freqs: &Vec<f32>) -> Vec<f32> {
+        freqs.clone().windows(3).flat_map(|w| [w[0], w[2]]).collect()
     }
 }

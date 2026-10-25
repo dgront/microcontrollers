@@ -40,15 +40,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Open PCM5102A
     let pcm = devices::initialize_pcm()?;
+    let mut notes = Notes::new(4);
+    let a_minor = notes.frequencies(Notes::A_MINOR);
+    let mut up_down = a_minor.clone();
+    up_down.extend(a_minor.iter().rev().copied());
+    up_down.extend(Notes::thirds(&a_minor));
+    up_down.extend(Notes::thirds(&a_minor).iter().rev());
 
-    let notes = notes::Notes::frequencies(Notes::A_MINOR, 4);
-
-    // Generate 440 Hz stereo sine wave
-    //    let mut samples = Vec::<i16>::new();
     let mut samples = [0_i16; settings::BLOCK * 2];
     let mut phase = 0.0_f32;
     let io = pcm.io_i16()?;
-    for freq in notes {
+    for freq in up_down {
         let phase_step = 2.0 * PI * freq / settings::RATE as f32;
         for _ in 0..BLOCKS_PER_NOTE {
             // Generate one block
