@@ -3,9 +3,11 @@ name = "sound"
 version = "0.1.0"
 edition = "2021"
 
-#[dependencies]
 [target.'cfg(target_os = "linux")'.dependencies]
 alsa = "0.9"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
 
 [[bin]]
 name = "test"
