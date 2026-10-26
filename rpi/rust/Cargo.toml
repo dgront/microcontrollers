@@ -14,5 +14,5 @@ name = "test"
 path = "./src/test.rs"
 
 [[bin]]
-name = "sound"
-path = "./src/sound.rs"
+name = "synth"
+path = "src/synth.rs"

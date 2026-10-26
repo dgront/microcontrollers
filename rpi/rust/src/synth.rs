@@ -1,6 +1,7 @@
 mod devices;
 mod settings;
 mod notes;
+mod sounds;
 
 #[cfg(target_os = "linux")]
 use alsa::pcm::{Access, Format, HwParams, PCM};
@@ -119,6 +120,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Wave function
     let wave = args.waveform();
 
+    let sound = sounds::Sound::piano(440.0);
     let n_blocks: usize = args.blocks_per_note();
     
     let mut samples = [0_i16; settings::BLOCK * 2];
