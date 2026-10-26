@@ -7,13 +7,11 @@ mod sounds;
 use alsa::pcm::{Access, Format, HwParams, PCM};
 #[cfg(target_os = "linux")]
 use alsa::{Direction, ValueOr};
-use std::f32::consts::PI;
-
-use crate::notes::Notes;
-
 
 use clap::{ArgGroup, Parser};
+
 use crate::sounds::Sound;
+use crate::notes::Notes;
 
 #[derive(Parser, Debug)]
 #[command(version, about = "PCM5102A waveform synthesizer")]
