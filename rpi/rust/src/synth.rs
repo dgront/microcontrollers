@@ -119,30 +119,37 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let notes_to_play = vec![notes.frequency("A")];
     // Wave function
     let wave = args.waveform();
-
-    let sound = sounds::Sound::piano(440.0);
+    let notes = Notes::new(3);
+    let sound = sounds::Sound::piano(notes.frequency("A"));
     let n_blocks: usize = args.blocks_per_note();
-    
-    let mut samples = [0_i16; settings::BLOCK * 2];
+    eprintln!("Playing {} notes, {} blocks per note", notes_to_play.len(), n_blocks);
+    let mut samples = [0_f32; settings::BLOCK * 2];
+    let mut signals = [0_i16; settings::BLOCK * 2];
+    let dt = 1.0 / settings::RATE as f64;
     let mut phase = 0.0_f32;
     let io = pcm.io_i16()?;
     for freq in notes_to_play {
-        let phase_step = 2.0 * PI * freq / settings::RATE as f32;
+        let phase_step = 2.0 * PI * freq as f32 / settings::RATE as f32;
+        let mut time = 0.0_f64;
         for _ in 0..n_blocks {
             // Generate one block
-            for frame in samples.chunks_exact_mut(2) {
-               let value_l = (wave(phase) * 10000.0) as i16;
-
-                frame[0] = value_l; // left
-                frame[1] = value_l; // right
-
-                phase = (phase + phase_step) % (2.0 * PI);
+            time = sound.sample(time, dt, &mut samples);
+            for j in 0..samples.len() {
+                signals[j] = (samples[j] * 10000.0) as i16;
             }
+            // for frame in samples.chunks_exact_mut(2) {
+            //    let value_l = (wave(phase) * 10000.0) as i16;
+            //
+            //     frame[0] = value_l; // left
+            //     frame[1] = value_l; // right
+            //
+            //     phase = (phase + phase_step) % (2.0 * PI);
+            // }
 
             // Send the block to ALSA
             let mut written = 0;
             while written < settings::BLOCK {
-                let n = io.writei(&samples[written * 2..])?;
+                let n = io.writei(&signals[written * 2..])?;
                 if n == 0 { return Err("ALSA writei() returned 0 frames".into()); }
                 written += n;
             }

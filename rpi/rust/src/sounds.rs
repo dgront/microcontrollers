@@ -66,9 +66,12 @@ impl Sound {
     ///
     /// Sound sampling starts at `start` seconds, with a time step of `dt` seconds between samples.
     /// The number of samples is determined by the length of the `out` buffer.
-    pub fn sample(&self, start: f64, dt: f64, out: &mut [f32]) {
+    /// Returns the time of the next sample after the last one.
+    pub fn sample(&self, start: f64, dt: f64, out: &mut [f32]) -> f64 {
         out.fill(0.0);
         self.render_add(start, dt, 1.0, out);
+
+        return start + dt * (out.len() as f64);
     }
 
     // Add weighted samples to an existing buffer.

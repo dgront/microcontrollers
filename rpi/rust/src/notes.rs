@@ -19,7 +19,7 @@ impl Notes {
     }
 
     /// Frequency in Hz, assuming A4 = 440 Hz.
-    pub fn frequency(&self, note: &str) -> f32 {
+    pub fn frequency(&self, note: &str) -> f64 {
         let semitone = match note {
             "C"  => 0,
             "C#" | "Db" => 1,
@@ -37,11 +37,11 @@ impl Notes {
         };
 
         let midi = 12 * (self.octave as i32 + 1) + semitone;
-        440.0 * 2.0_f32.powf((midi - 69) as f32 / 12.0)
+        440.0 * 2.0_f64.powf((midi - 69) as f64 / 12.0)
     }
 
     /// Accepts "C E G", "C# D# F#" or "CEG".
-    pub fn frequencies(&mut self, notes: &str) -> Vec<f32> {
+    pub fn frequencies(&mut self, notes: &str) -> Vec<f64> {
         let mut result = Vec::new();
         let mut chars = notes.chars().peekable();
 
@@ -65,7 +65,7 @@ impl Notes {
         result
     }
 
-    pub fn thirds(freqs: &Vec<f32>) -> Vec<f32> {
+    pub fn thirds(freqs: &Vec<f64>) -> Vec<f64> {
         freqs.clone().windows(3).flat_map(|w| [w[0], w[2]]).collect()
     }
 }
