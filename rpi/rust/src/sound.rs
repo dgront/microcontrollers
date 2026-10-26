@@ -30,20 +30,88 @@ fn rectangular(phase: f32) -> f32 {
 }
 
 
+const SOFT_PIANO: [f32; 10] =
+    [1.0, 0.40, 0.25, 0.12, 0.08, 0.05, 0.03, 0.02, 0.01, 0.0];
+
+fn piano(phase: f32) -> f32 { 
+
+    let sum: f32 = SOFT_PIANO.iter().map(|c| c.abs()).sum();
+    SOFT_PIANO
+        .iter()
+        .enumerate()
+        .map(|(i, &c)| c * (phase * (i + 1) as f32).sin())
+        .sum::<f32>() / sum
+}
+
+use clap::{ArgGroup, Parser};
+
+#[derive(Parser, Debug)]
+#[command(version, about = "PCM5102A waveform synthesizer")]
+#[command(group(
+    ArgGroup::new("waveform")
+        .args(["sin", "sin_abs", "sin_sqr", "sawtooth", "rectangular", "piano"])
+        .multiple(false)
+))]
+
+struct Args {
+    #[arg(long)]
+    sin: bool,
+
+    #[arg(long)]
+    sin_abs: bool,
+
+    #[arg(long)]
+    sin_sqr: bool,
+
+    #[arg(long)]
+    sawtooth: bool,
+
+    #[arg(long)]
+    rectangular: bool,
+
+    #[arg(long)]
+    piano: bool,
+
+    /// Notes per minute
+    #[arg(long, default_value_t = 120.0)]
+    npm: f32,
+}
+
+
+impl Args {
+    fn waveform(&self) -> fn(f32) -> f32 {
+        if self.sin_sqr {
+            sin_sqr
+        } else if self.sawtooth {
+            sawtooth
+        } else if self.rectangular {
+            rectangular
+        } else if self.piano {
+            piano
+        } else {
+            sin // default
+        }
+    }
+
+    fn blocks_per_note(&self) -> usize {
+        return (60.0 * settings::RATE as f64 / (self.npm as f64 * settings::BLOCK as f64))
+                .round()
+                .max(1.0) as usize;
+    }
+}
+
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
+    let args = Args::parse();
 
-    const BLOCKS_PER_NOTE: usize = 24;
 
-    // A natural minor scale: A B C D E F G A
-    // let notes = [
-    //     440.00, 493.88, 523.25, 587.33,
-    //     659.25, 698.46, 783.99, 880.00,
-    // ];
 
 
     // Open PCM5102A
     let pcm = devices::initialize_pcm()?;
+
+    // what to play
     let mut notes = Notes::new(4);
     let a_minor = notes.frequencies(Notes::A_MINOR);
     let mut up_down = a_minor.clone();
@@ -51,20 +119,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     up_down.extend(Notes::thirds(&a_minor));
     up_down.extend(Notes::thirds(&a_minor).iter().rev());
 
+    // Wave function
+    let wave = args.waveform();
+
+    let n_blocks: usize = args.blocks_per_note();
+    
     let mut samples = [0_i16; settings::BLOCK * 2];
     let mut phase = 0.0_f32;
     let io = pcm.io_i16()?;
     for freq in up_down {
         let phase_step = 2.0 * PI * freq / settings::RATE as f32;
-        for _ in 0..BLOCKS_PER_NOTE {
+        for _ in 0..n_blocks {
             // Generate one block
             for frame in samples.chunks_exact_mut(2) {
-//               let value_l = (sin(phase) * 10000.0) as i16;
-               let value_l = (sin_sqr(phase) * 10000.0) as i16;
-//                let value_l = (sawtooth(phase) * 10000.0) as i16;
-//                let value_l = (rectangular(phase) * 10000.0) as i16;
-                //                let value_r = (sawtooth(phase, freq, RATE as f32) * 10000.0) as i16;
-                //                let value_r = (rectangular(phase, freq, RATE as f32) * 10000.0) as i16;
+               let value_l = (wave(phase) * 10000.0) as i16;
 
                 frame[0] = value_l; // left
                 frame[1] = value_l; // right
