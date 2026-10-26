@@ -51,8 +51,9 @@ impl MockupPCM {
 
 impl MockupIO {
     pub fn writei(&self, samples: &[i16]) -> io::Result<usize> {
-        for frame in samples.chunks_exact(2) {
-            println!("L: {}, R: {}", frame[0], frame[1]);
+
+        for (i,frame) in samples.chunks_exact(2).enumerate() {
+            println!("{i} {} {}", frame[0], frame[1]);
         }
 
         // ALSA writei() returns frames, not samples

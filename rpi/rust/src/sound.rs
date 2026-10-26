@@ -30,14 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 
     const BLOCKS_PER_NOTE: usize = 24;
-
-    // A natural minor scale: A B C D E F G A
-    // let notes = [
-    //     440.00, 493.88, 523.25, 587.33,
-    //     659.25, 698.46, 783.99, 880.00,
-    // ];
-
-
+    
     // Open PCM5102A
     let pcm = devices::initialize_pcm()?;
     let mut notes = Notes::new(4);
