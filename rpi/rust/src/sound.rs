@@ -111,11 +111,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // what to play
     let mut notes = Notes::new(4);
     let a_minor = notes.frequencies(Notes::A_MINOR);
-    let mut up_down = a_minor.clone();
-    up_down.extend(a_minor.iter().rev().copied());
-    up_down.extend(Notes::thirds(&a_minor));
-    up_down.extend(Notes::thirds(&a_minor).iter().rev());
-
+    // let mut notes_to_play = a_minor.clone();
+    // notes_to_play.extend(a_minor.iter().rev().copied());
+    // notes_to_play.extend(Notes::thirds(&a_minor));
+    // notes_to_play.extend(Notes::thirds(&a_minor).iter().rev());
+    let notes_to_play = vec![notes.frequency("A")];
     // Wave function
     let wave = args.waveform();
 
@@ -124,7 +124,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut samples = [0_i16; settings::BLOCK * 2];
     let mut phase = 0.0_f32;
     let io = pcm.io_i16()?;
-    for freq in up_down {
+    for freq in notes_to_play {
         let phase_step = 2.0 * PI * freq / settings::RATE as f32;
         for _ in 0..n_blocks {
             // Generate one block
