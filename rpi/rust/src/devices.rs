@@ -7,7 +7,7 @@ use alsa::pcm::PCM;
 
 #[cfg(target_os = "linux")]
 use alsa::{Direction, ValueOr};
-
+#[cfg(target_os = "linux")]
 use crate::settings::{RATE, BLOCK, CHANNELS};
 
 pub struct MockupPCM;

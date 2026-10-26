@@ -1,25 +1,28 @@
 use std::f64::consts::TAU;
 
 pub enum Sound {
-    Sine { freq: f64 },
-    Sawtooth { freq: f64 },
-    Square { freq: f64 },
+    Sine { ratio: f64 },
+    SineSqr { ratio: f64 },
+    Sawtooth { ratio: f64 },
+    Square { ratio: f64 },
     Mix(Vec<(f32, Sound)>),
 }
 
 impl Sound {
 
-    pub fn sine(freq: f64) -> Self { Self::Sine { freq } }
+    pub fn sine(ratio: f64) -> Self { Self::Sine { ratio } }
 
-    pub fn sawtooth(freq: f64) -> Self { Self::Sawtooth { freq } }
+    pub fn sine_sqr(ratio: f64) -> Self { Self::SineSqr { ratio } }
 
-    pub fn square(freq: f64) -> Self { Self::Square { freq } }
+    pub fn sawtooth(ratio: f64) -> Self { Self::Sawtooth { ratio } }
+
+    pub fn square(ratio: f64) -> Self { Self::Square { ratio } }
 
     pub fn mix(components: impl IntoIterator<Item = (f32, Sound)>) -> Self {
         Self::Mix(components.into_iter().collect())
     }
 
-    pub fn piano(freq: f64) -> Self {
+    pub fn piano(_ratio: f64) -> Self {
         const COEFF: [f32; 10] = [1.0, 0.40, 0.25, 0.12, 0.08, 0.05, 0.03, 0.02, 0.01, 0.0];
 
         let norm: f32 = COEFF.iter().map(|c| c.abs()).sum();
@@ -28,24 +31,29 @@ impl Sound {
             COEFF.iter()
                 .enumerate()
                 .map(|(i, &c)| {
-                    (c / norm, Self::sine(freq * (i + 1) as f64))
+                    (c / norm, Self::sine((i + 1)  as f64))
                 })
         )
     }
 
-    /// Returns the value of the sound at a given time (in seconds).
-    pub fn value(&self, time: f64) -> f32 {
+    /// Returns the value of the sound of a given frequency `freq` at a given time (in seconds).
+    pub fn value(&self, time: f64, freq: f64) -> f32 {
         match self {
-            Self::Sine { freq } => {
-                (TAU * freq * time).sin() as f32
+            Self::Sine { ratio } => {
+                (TAU * freq * ratio * time).sin() as f32
             }
 
-            Self::Sawtooth { freq } => {
-                (2.0 * (freq * time).rem_euclid(1.0) - 1.0) as f32
+            Self::SineSqr { ratio } => {
+                let v = (TAU * freq * ratio * time).sin() as f32;
+                v * v
             }
 
-            Self::Square { freq } => {
-                if (freq * time).rem_euclid(1.0) < 0.5 {
+            Self::Sawtooth { ratio } => {
+                (2.0 * (freq * ratio * time).rem_euclid(1.0) - 1.0) as f32
+            }
+
+            Self::Square { ratio } => {
+                if (freq * ratio * time).rem_euclid(1.0) < 0.5 {
                     1.0
                 } else {
                     -1.0
@@ -54,34 +62,45 @@ impl Sound {
 
             Self::Mix(components) => {
                 components.iter()
-                    .map(|(weight, sound)| weight * sound.value(time))
+                    .map(|(weight, sound)| weight * sound.value(time, freq))
                     .sum()
             }
         }
     }
-
-    // ---------- Block rendering ----------
 
     /// Renders a block of sound samples into the given output buffer.
     ///
     /// Sound sampling starts at `start` seconds, with a time step of `dt` seconds between samples.
     /// The number of samples is determined by the length of the `out` buffer.
     /// Returns the time of the next sample after the last one.
-    pub fn sample(&self, start: f64, dt: f64, out: &mut [f32]) -> f64 {
+    pub fn sample(&self, start: f64, dt: f64, freq: f64, out: &mut [f32]) -> f64 {
         out.fill(0.0);
-        self.render_add(start, dt, 1.0, out);
+        self.render_add(start, dt, freq, 1.0, out);
 
         return start + dt * (out.len() as f64);
     }
 
     // Add weighted samples to an existing buffer.
     // This is the key operation for efficient composition.
-    fn render_add(&self, start: f64, dt: f64, weight: f32, out: &mut [f32]) {
+    fn render_add(&self, start: f64, dt: f64, freq: f64, weight: f32, out: &mut [f32]) {
 
         match self {
-            Self::Sine { freq } => {
-                let mut phase = (TAU * freq * start).rem_euclid(TAU);
-                let step = TAU * freq * dt;
+            Self::SineSqr { ratio } => {
+                let frequency = freq * ratio;
+                let mut phase = (TAU * frequency * start).rem_euclid(TAU);
+                let step = TAU * frequency * dt;
+
+                for sample in out.iter_mut() {
+                    let v = phase.sin() as f32;
+                    *sample += weight * v * v;
+                    phase += step;
+                    if phase >= TAU { phase -= TAU; }
+                }
+            }
+            Self::Sine { ratio } => {
+                let frequency = freq * ratio;
+                let mut phase = (TAU * frequency * start).rem_euclid(TAU);
+                let step = TAU * frequency * dt;
 
                 for sample in out.iter_mut() {
                     *sample += weight * phase.sin() as f32;
@@ -90,9 +109,10 @@ impl Sound {
                 }
             }
 
-            Self::Sawtooth { freq } => {
-                let step = freq * dt;
-                let mut phase = (freq * start).rem_euclid(1.0);
+            Self::Sawtooth { ratio } => {
+                let frequency = freq * ratio;
+                let step = frequency * dt;
+                let mut phase = (frequency * start).rem_euclid(1.0);
 
                 for sample in out.iter_mut() {
                     *sample += weight * (2.0 * phase - 1.0) as f32;
@@ -100,9 +120,10 @@ impl Sound {
                 }
             }
 
-            Self::Square { freq } => {
-                let step = freq * dt;
-                let mut phase = (freq * start).rem_euclid(1.0);
+            Self::Square { ratio } => {
+                let frequency = freq * ratio;
+                let step = frequency * dt;
+                let mut phase = (frequency * start).rem_euclid(1.0);
 
                 for sample in out.iter_mut() {
                     *sample += weight * if phase < 0.5 {
@@ -117,7 +138,7 @@ impl Sound {
 
             Self::Mix(components) => {
                 for (w, sound) in components {
-                    sound.render_add(start, dt, weight * w, out);
+                    sound.render_add(start, dt, freq, weight * w, out);
                 }
             }
         }
