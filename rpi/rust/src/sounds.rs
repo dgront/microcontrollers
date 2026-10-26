@@ -185,7 +185,8 @@ impl Sound {
 
 impl Sound {
     pub fn piano(_ratio: f64) -> Self {
-        const COEFF: [f32; 10] = [1.0, 0.40, 0.25, 0.12, 0.08, 0.05, 0.03, 0.02, 0.01, 0.0];
+        const COEFF: [f32; 6] = [1.0, 0.40, 0.25, 0.12, 0.08, 0.05];
+        // const COEFF: [f32; 10] = [1.0, 0.40, 0.25, 0.12, 0.08, 0.05, 0.03, 0.02, 0.01, 0.0];
 
         let norm: f32 = COEFF.iter().sum();
 
