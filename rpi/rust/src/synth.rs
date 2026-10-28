@@ -2,6 +2,7 @@ mod devices;
 mod settings;
 mod notes;
 mod sounds;
+mod scales;
 
 #[cfg(target_os = "linux")]
 use alsa::pcm::{Access, Format, HwParams, PCM};
@@ -11,7 +12,7 @@ use alsa::{Direction, ValueOr};
 use clap::{ArgGroup, Parser};
 
 use crate::sounds::Sound;
-use crate::notes::Notes;
+use crate::notes::Note;
 
 #[derive(Parser, Debug)]
 #[command(version, about = "PCM5102A waveform synthesizer")]
@@ -76,14 +77,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let pcm = devices::initialize_pcm()?;
 
     // what to play
-    let mut notes = Notes::new(3);
-    // let a_minor = notes.frequencies(Notes::A_MINOR);
-    // let mut notes_to_play = a_minor.clone();
-    // notes_to_play.extend(a_minor.iter().rev().copied());
-    // notes_to_play.extend(Notes::thirds(&a_minor));
-    // notes_to_play.extend(Notes::thirds(&a_minor).iter().rev());
-
-    let notes_to_play = vec![notes.frequency("A")];
+    let notes_to_play = vec![Note::A.frequency()];
 
     // Select instrument
     let instrument = args.instrument();

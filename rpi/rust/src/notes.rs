@@ -1,71 +1,79 @@
-pub struct Notes {
-    octave: u16,
+use std::str::FromStr;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum Note {
+    C  = 0,
+    Cs = 1,
+    D  = 2,
+    Ds = 3,
+    E  = 4,
+    F  = 5,
+    Fs = 6,
+    G  = 7,
+    Gs = 8,
+    A  = 9,
+    As = 10,
+    B  = 11,
 }
 
-impl Notes {
-    pub const C_MAJOR: &'static str = "C D E F G A B + C";
-    pub const C_MINOR: &'static str = "C D Eb F G Ab Bb + C";
-
-    pub const A_MAJOR: &'static str = "A B + C# D E F# G# A";
-    pub const A_MINOR: &'static str = "A B + C D E F G# A";
-
-    pub const G_MAJOR: &'static str = "G A B + C D E F# G";
-    pub const G_MINOR: &'static str = "G A Bb + C D Eb F G";
-    pub const F_MAJOR: &'static str = "F G A Bb + C D E F";
-    pub const F_MINOR: &'static str = "F G Ab Bb + C Db Eb F";
-
-    pub fn new(octave: u16) -> Self {
-        Notes { octave }
-    }
-
+impl Note {
     /// Frequency in Hz, assuming A4 = 440 Hz.
-    pub fn frequency(&self, note: &str) -> f64 {
-        let semitone = match note {
-            "C"  => 0,
-            "C#" | "Db" => 1,
-            "D"  => 2,
-            "D#" | "Eb" => 3,
-            "E"  => 4,
-            "F"  => 5,
-            "F#" | "Gb" => 6,
-            "G"  => 7,
-            "G#" | "Ab" => 8,
-            "A"  => 9,
-            "A#" | "Bb" => 10,
-            "B"  => 11,
-            _ => panic!("Unknown note: {note}"),
-        };
-
-        let midi = 12 * (self.octave as i32 + 1) + semitone;
-        440.0 * 2.0_f64.powf((midi - 69) as f64 / 12.0)
-    }
-
-    /// Accepts "C E G", "C# D# F#" or "CEG".
-    pub fn frequencies(&mut self, notes: &str) -> Vec<f64> {
-        let mut result = Vec::new();
-        let mut chars = notes.chars().peekable();
-
-        while let Some(c) = chars.next() {
-            match c {
-                '+' => self.octave += 1,
-                '-' => self.octave -= 1,
-                c if c.is_whitespace() => continue,
-                _ => {
-                    let mut note = c.to_string();
-
-                    if matches!(chars.peek(), Some('#' | 'b')) {
-                        note.push(chars.next().unwrap());
-                    }
-
-                    result.push(self.frequency(&note));
-                }
-            }
+    pub const fn frequency(self) -> f64 {
+        match self {
+            Self::C  => 261.63,
+            Self::Cs => 277.18,
+            Self::D  => 293.66,
+            Self::Ds => 311.13,
+            Self::E  => 329.63,
+            Self::F  => 349.23,
+            Self::Fs => 369.99,
+            Self::G  => 392.00,
+            Self::Gs => 415.30,
+            Self::A  => 440.00,
+            Self::As => 466.16,
+            Self::B  => 493.88,
         }
-
-        result
     }
 
-    pub fn thirds(freqs: &Vec<f64>) -> Vec<f64> {
-        freqs.clone().windows(3).flat_map(|w| [w[0], w[2]]).collect()
+    pub fn octave_frequency(self, octave: u16) -> f64 {
+        self.frequency() * 2.0_f64.powi(octave as i32 - 4)
     }
 }
+
+
+impl FromStr for Note {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "C"         => Ok(Note::C),
+            "C#" | "Db" => Ok(Note::Cs),
+            "D"         => Ok(Note::D),
+            "D#" | "Eb" => Ok(Note::Ds),
+            "E"         => Ok(Note::E),
+            "F"         => Ok(Note::F),
+            "F#" | "Gb" => Ok(Note::Fs),
+            "G"         => Ok(Note::G),
+            "G#" | "Ab" => Ok(Note::Gs),
+            "A"         => Ok(Note::A),
+            "A#" | "Bb" => Ok(Note::As),
+            "B"         => Ok(Note::B),
+            _ => Err(format!("Unknown note: {s}")),
+        }
+    }
+}
+
+
+#[derive(Debug, Clone, Copy)]
+pub struct Pitch {
+    pub note: Note,
+    pub octave: u16,
+}
+
+impl Pitch {
+    pub fn frequency(self) -> f64 {
+        self.note.octave_frequency(self.octave)
+    }
+}
+
