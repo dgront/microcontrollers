@@ -198,11 +198,11 @@ impl Sound {
                     let harmonic = (i + 1) as f64;
 
                     let adsr = Adsr {
-                        attack: 0.003,
-                        decay: 0.15 / harmonic.sqrt(),
+                        attack: 0.03,
+                        decay: 0.2 / harmonic.sqrt(),
                         sustain: 0.25 / harmonic.sqrt() as f32,
                         release: 0.12 / harmonic.sqrt(),
-                        duration: 0.5,
+                        duration: 1.0,
                     };
 
                     let partial = Self::Sine {
