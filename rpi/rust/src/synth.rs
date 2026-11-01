@@ -59,6 +59,15 @@ struct Args {
     /// Interactive mode
     #[arg(long)]
     interactive: bool,
+
+    #[arg(long, value_name = "SECONDS")]
+    echo: Option<f64>,
+
+    #[arg(long, default_value_t = 0.4)]
+    echo_feedback: f64,
+
+    #[arg(long, default_value_t = 0.2)]
+    echo_mix: f64,
 }
 
 
@@ -99,6 +108,11 @@ impl Args {
             eprintln!("biquad lowpass filter with cutoff frequency: {cutoff} Hz and Q factor: {q}");
         }
 
+        if let Some(delay) = self.echo {
+            filters.push(Filter::echo(delay, self.echo_feedback, self.echo_mix));
+            eprintln!("echo filter with delay: {delay} seconds, feedback: {}, mix: {}", self.echo_feedback, self.echo_mix);
+        }
+
         return filters;
     }
 }
@@ -111,7 +125,7 @@ fn play_notes(notes_to_play: &[Note], instrument: &Instrument, filters: Vec<Filt
     let mut signals = [0_i16; settings::BLOCK * settings::CHANNELS];
     let io = pcm.io_i16()?;
     for note in notes_to_play {
-        let mut sound = Sound::new(*note, 4, instrument.clone());
+        let mut sound = Sound::new(*note, 3, instrument.clone());
         sound.filters.extend(filters.iter().cloned());
         for _ in 0..blocks_per_note {
             // Clear the buffer after each block

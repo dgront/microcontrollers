@@ -4,6 +4,7 @@ use crate::settings::{RATE};
 pub enum Filter {
     LowPass(LowPass),
     Biquad(Biquad),
+    Echo(Echo)
 }
 
 impl Filter {
@@ -16,10 +17,15 @@ impl Filter {
         Filter::Biquad(Biquad::new(cutoff, q))
     }
 
+    pub fn echo(delay_seconds: f64, feedback: f64, mix: f64) -> Self {
+        Filter::Echo(Echo::new(delay_seconds, feedback, mix))
+    }
+
     pub fn apply(&mut self, samples: &mut [f32]) {
         match self {
             Filter::LowPass(f) => f.apply(samples),
             Filter::Biquad(f) => f.apply(samples),
+            Filter::Echo(f) => f.apply(samples)
         }
     }
 }
@@ -85,3 +91,39 @@ impl Biquad {
         }
     }
 }
+
+
+#[derive(Debug, Clone)]
+pub struct Echo {
+    buffer: Vec<f32>,
+    position: usize,
+    feedback: f32,
+    mix: f32,
+}
+
+impl Echo {
+    pub fn new(delay_seconds: f64, feedback: f64, mix: f64) -> Self {
+        let delay_samples = (delay_seconds * RATE as f64).round() as usize;
+
+        Self {
+            buffer: vec![0.0; delay_samples.max(1)],
+            position: 0,
+            feedback: feedback.clamp(0.0, 0.99) as f32,
+            mix: mix.clamp(0.0, 1.0) as f32,
+        }
+    }
+
+    pub fn apply(&mut self, samples: &mut [f32]) {
+        for sample in samples {
+            let input = *sample;
+            let delayed = self.buffer[self.position];
+
+            self.buffer[self.position] = input + delayed * self.feedback;
+
+            *sample = input + self.mix * delayed;
+
+            self.position = (self.position + 1) % self.buffer.len();
+        }
+    }
+}
+
