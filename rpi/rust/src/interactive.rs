@@ -9,7 +9,7 @@ use alsa::{Direction, ValueOr};
 
 #[cfg(not(target_os = "linux"))]
 use crate::devices::MockupPCM as PCM;
-
+use crate::filters::Filter;
 use crate::Note;
 use crate::sound_waves::{Sound, Instrument};
 use crate::settings;
@@ -80,7 +80,8 @@ fn parse_chord(input: &str) -> Result<Vec<Note>, String> {
 }
 
 
-pub fn play_interactive(pcm: &PCM, instrument: Instrument) -> Result<(), Box<dyn std::error::Error>> {
+pub fn play_interactive(pcm: &PCM, instrument: Instrument, filters: Vec<Filter>)
+            -> Result<(), Box<dyn std::error::Error>> {
 
     let (tx, rx) = mpsc::channel();
 
@@ -101,7 +102,9 @@ pub fn play_interactive(pcm: &PCM, instrument: Instrument) -> Result<(), Box<dyn
             match command {
                 Command::Play(notes, octave) => {
                     for note in notes {
-                        sounds.push(Sound::new(note, octave, instrument.clone()));
+                        let mut sound = Sound::new(note, octave, instrument.clone());
+                        sound.filters.extend(filters.iter().cloned());
+                        sounds.push(sound);
                     }
                 }
                 Command::Release => {
@@ -114,12 +117,6 @@ pub fn play_interactive(pcm: &PCM, instrument: Instrument) -> Result<(), Box<dyn
         }
 
         sounds.retain(|sound| !sound.is_finished());
-
-//        if sounds.is_empty() {
-//            // If no sounds are active, just sleep for a while to avoid busy waiting
-//            std::thread::sleep(std::time::Duration::from_millis(10));
-//            continue;
-//        }
 
         // Generate and mix active sounds
         mono.fill(0);

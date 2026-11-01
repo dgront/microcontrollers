@@ -1,6 +1,7 @@
 use std::f64::consts::TAU;
 
 use crate::envelope::ADSREnvelope;
+use crate::filters::Filter;
 use crate::notes::Note;
 use crate::settings::{BLOCK, DT};
 
@@ -161,13 +162,14 @@ pub struct Sound {
     pub note: Note,
     pub octave: u16,
     pub timer: f64,
+    pub filters: Vec<Filter>,
     instrument: Instrument,
 }
 
 impl Sound {
 
     pub fn new(note: Note, octave: u16, components: Instrument) -> Self {
-        Self { note, octave, timer: 0.0, instrument: components }
+        Self { note, octave, timer: 0.0, filters: vec![], instrument: components }
     }
 
     pub fn frequency(&self) -> f64 {

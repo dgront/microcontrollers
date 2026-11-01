@@ -5,6 +5,7 @@ mod sound_waves;
 mod scales;
 mod envelope;
 mod interactive;
+mod filters;
 
 #[cfg(target_os = "linux")]
 use alsa::pcm::{Access, Format, HwParams, PCM};
@@ -15,6 +16,7 @@ use alsa::{Direction, ValueOr};
 use crate::devices::MockupPCM as PCM;
 
 use clap::{ArgGroup, Parser};
+use crate::filters::Filter;
 use crate::interactive::play_interactive;
 use crate::sound_waves::{Instrument, Sound, SoundComponent, SoundWave};
 use crate::notes::Note;
@@ -82,13 +84,15 @@ impl Args {
 }
 
 
-fn play_notes(notes_to_play: &[Note], instrument: &Instrument, blocks_per_note: usize, pcm: &PCM) -> Result<(), Box<dyn std::error::Error>> {
+fn play_notes(notes_to_play: &[Note], instrument: &Instrument, filters: Vec<Filter>,
+              blocks_per_note: usize, pcm: &PCM) -> Result<(), Box<dyn std::error::Error>> {
 
     let mut mono = [0_i16; settings::BLOCK];
     let mut signals = [0_i16; settings::BLOCK * settings::CHANNELS];
     let io = pcm.io_i16()?;
     for note in notes_to_play {
         let mut sound = Sound::new(*note, 4, instrument.clone());
+        sound.filters.extend(filters.iter().cloned());
         for _ in 0..blocks_per_note {
             // Clear the buffer after each block
             mono.fill(0);
@@ -126,13 +130,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     eprintln!("Using envelope:\n{}", envelope);
     let mut instrument
         = Instrument::single_component(SoundComponent::new(args.wave_type(), envelope));
+    let filters = vec![Filter::biquad_lowpass(1000.0, 0.707)];
     let n_blocks: usize = args.blocks_per_note();
     eprintln!("Playing {} notes, {} blocks per note", notes_to_play.len(), n_blocks);
 
     if args.interactive {
-        return play_interactive(&pcm, instrument);
+        return play_interactive(&pcm, instrument, filters);
     } else {
-        play_notes(&notes_to_play, &mut instrument, n_blocks, &pcm)?;
+        play_notes(&notes_to_play, &mut instrument, filters, n_blocks, &pcm)?;
     }
     // pcm.drain()?;
     Ok(())
