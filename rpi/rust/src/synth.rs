@@ -50,7 +50,7 @@ struct Args {
     lowpass: Option<f64>,
 
     #[arg(long, num_args = 2, value_names = ["CUTOFF", "Q"])]
-    bipolar: Option<Vec<f64>>,
+    biquad: Option<Vec<f64>>,
 
     /// Notes per minute
     #[arg(long, default_value_t = 120.0)]
@@ -92,7 +92,7 @@ impl Args {
             eprintln!("lowpass filter with cutoff frequency: {cutoff} Hz");
         }
 
-        if let Some(params) = &self.bipolar {
+        if let Some(params) = &self.biquad {
             let [cutoff, q] = params.as_slice() else { unreachable!("clap requires exactly two values"); };
 
             filters.push(Filter::biquad_lowpass(*cutoff, *q));
