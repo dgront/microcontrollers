@@ -175,4 +175,8 @@ impl Sound {
     pub fn release(&mut self) {
         self.instrument.release();
     }
+
+    pub fn is_finished(&self) -> bool {
+        self.instrument.components.iter().all(|(_, component)| component.is_finished())
+    }
 }
