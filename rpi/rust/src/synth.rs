@@ -122,7 +122,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let notes_to_play = vec![Note::A];
 
     // Select instrument
-    let envelope = envelope::ADSREnvelope::new(0.05, 0.35, 0.5, 1.0, 0.3, 0.1);
+    let envelope = envelope::ADSREnvelope::new(0.05, 0.35, 0.5, 3.0, 0.3, 0.1);
     eprintln!("Using envelope:\n{}", envelope);
     let mut instrument
         = Instrument::single_component(SoundComponent::new(args.wave_type(), envelope));
