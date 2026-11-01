@@ -16,7 +16,7 @@ use alsa::{Direction, ValueOr};
 use crate::devices::MockupPCM as PCM;
 
 use clap::{ArgGroup, Parser};
-use crate::filters::Filter;
+use crate::filters::{Filter};
 use crate::interactive::play_interactive;
 use crate::sound_waves::{Instrument, Sound, SoundComponent, SoundWave};
 use crate::notes::Note;
@@ -46,8 +46,11 @@ struct Args {
     #[arg(long)]
     square: bool,
 
-    #[arg(long)]
-    piano: bool,
+    #[arg(long, value_name = "CUTOFF")]
+    lowpass: Option<f64>,
+
+    #[arg(long, num_args = 2, value_names = ["CUTOFF", "Q"])]
+    bipolar: Option<Vec<f64>>,
 
     /// Notes per minute
     #[arg(long, default_value_t = 120.0)]
@@ -80,6 +83,21 @@ impl Args {
         return (60.0 * settings::RATE as f64 / (self.npm as f64 * settings::BLOCK as f64))
                 .round()
                 .max(1.0) as usize;
+    }
+
+    fn filters(&self) -> Vec<Filter> {
+        let mut filters = Vec::new();
+        if let Some(cutoff) = self.lowpass {
+            filters.push(Filter::lowpass(cutoff));
+        }
+
+        if let Some(params) = &self.bipolar {
+            let [cutoff, q] = params.as_slice() else { unreachable!("clap requires exactly two values"); };
+
+            filters.push(Filter::biquad_lowpass(*cutoff, *q));
+        }
+
+        return filters;
     }
 }
 
@@ -130,7 +148,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     eprintln!("Using envelope:\n{}", envelope);
     let mut instrument
         = Instrument::single_component(SoundComponent::new(args.wave_type(), envelope));
-    let filters = vec![Filter::biquad_lowpass(1000.0, 0.707)];
+    let filters = args.filters();
     let n_blocks: usize = args.blocks_per_note();
     eprintln!("Playing {} notes, {} blocks per note", notes_to_play.len(), n_blocks);
 

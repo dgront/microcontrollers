@@ -116,14 +116,14 @@ impl SoundComponent {
         Self { wave, envelope, buffer: [0.0; BLOCK]}
     }
 
-    pub fn sample(&mut self, start: f64, freq: f64) -> &[f32] {
+    pub fn sample(&mut self, start: f64, freq: f64) -> &mut [f32] {
 
         // --- Set the wave function value, in the range [-1.0, 1.0], into the buffer
         self.wave.sample(start, freq, &mut self.buffer);
         // --- Apply the envelope to the buffer, modifying it in place, i.e. multiplying the wave value by the envelope value at each sample
         self.envelope.apply(&mut self.buffer);
 
-        return &self.buffer
+        return &mut self.buffer
     }
 
     pub fn release(&mut self) {
@@ -184,6 +184,9 @@ impl Sound {
         let freq = self.frequency();
         for (weight, component) in self.instrument.iter_mut() {
             let block = component.sample(self.timer, freq);
+            for filter in self.filters.iter_mut() {
+                filter.apply(&mut block.to_vec());
+            }
             for i in 0..samples.len() {
                 samples[i] += (*weight * factor * block[i]) as i16;
             }
