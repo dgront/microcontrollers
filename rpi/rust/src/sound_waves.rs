@@ -10,6 +10,7 @@ pub enum SoundWave {
     SineSqr { ratio: f64 },
     Sawtooth { ratio: f64 },
     Square { ratio: f64 },
+    Pulse { ratio: f64,duty: f64 },
 }
 
 /// Implementations for a few sounds.
@@ -23,6 +24,7 @@ impl SoundWave {
 
     pub fn square(ratio: f64) -> Self { Self::Square { ratio } }
 
+    pub fn pulse(ratio: f64, duty: f64) -> Self { Self::Pulse { ratio, duty } }
 
     /// Renders a block of sound samples into the given output buffer.
     ///
@@ -72,6 +74,21 @@ impl SoundWave {
 
                 for sample in out.iter_mut() {
                     *sample = if phase < 0.5 {
+                        1.0
+                    } else {
+                        -1.0
+                    };
+
+                    phase = (phase + step).rem_euclid(1.0);
+                }
+            }
+            SoundWave::Pulse { ratio, duty } => {
+                let frequency = freq * ratio;
+                let step = frequency * DT;
+                let mut phase = (frequency * start).rem_euclid(1.0);
+
+                for sample in out.iter_mut() {
+                    *sample = if phase < *duty {
                         1.0
                     } else {
                         -1.0

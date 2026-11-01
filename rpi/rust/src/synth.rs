@@ -37,6 +37,10 @@ struct Args {
     #[arg(long)]
     sawtooth: bool,
 
+    /// pulse wave with given duty cycle (0.0 to 1.0)
+    #[arg(long)]
+    pulse: Option<f64>,
+
     #[arg(long)]
     square: bool,
 
@@ -63,7 +67,9 @@ impl Args {
             SoundWave::sawtooth(1.0)
         } else if self.square {
             SoundWave::square(1.0)
-        }  else {
+        }  else if let Some(duty) = self.pulse {
+            SoundWave::pulse(1.0, duty.clamp(0.0, 1.0))
+        }    else {
             SoundWave::sine(1.0) // default
         }
     }
