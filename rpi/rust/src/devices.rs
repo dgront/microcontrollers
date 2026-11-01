@@ -26,10 +26,15 @@ pub fn initialize_pcm() -> Result<PCM, Box<dyn std::error::Error>> {
 
     // Configure ALSA
     let hwp = HwParams::any(&pcm)?;
-    hwp.set_channels(CHANNELS)?;
+    hwp.set_channels(CHANNELS as u32)?;
     hwp.set_rate(RATE, ValueOr::Nearest)?;
     hwp.set_format(Format::s16())?;
     hwp.set_access(Access::RWInterleaved)?;
+
+    // Low-latency configuration
+    hwp.set_period_size_near(256, ValueOr::Nearest)?;
+    hwp.set_buffer_size_near(1024)?;
+
     pcm.hw_params(&hwp)?;
     drop(hwp);
 

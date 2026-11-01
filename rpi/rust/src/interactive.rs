@@ -115,11 +115,11 @@ pub fn play_interactive(pcm: &PCM, instrument: Instrument) -> Result<(), Box<dyn
 
         sounds.retain(|sound| !sound.is_finished());
 
-        if sounds.is_empty() {
-            // If no sounds are active, just sleep for a while to avoid busy waiting
-            std::thread::sleep(std::time::Duration::from_millis(10));
-            continue;
-        }
+//        if sounds.is_empty() {
+//            // If no sounds are active, just sleep for a while to avoid busy waiting
+//            std::thread::sleep(std::time::Duration::from_millis(10));
+//            continue;
+//        }
 
         // Generate and mix active sounds
         mono.fill(0);
