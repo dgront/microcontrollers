@@ -183,9 +183,9 @@ impl Sound {
 
         let freq = self.frequency();
         for (weight, component) in self.instrument.iter_mut() {
-            let block = component.sample(self.timer, freq);
+            let mut block = component.sample(self.timer, freq);
             for filter in self.filters.iter_mut() {
-                filter.apply(&mut block.to_vec());
+                filter.apply(&mut block);
             }
             for i in 0..samples.len() {
                 samples[i] += (*weight * factor * block[i]) as i16;

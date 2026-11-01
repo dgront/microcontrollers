@@ -76,6 +76,7 @@ impl Biquad {
     }
 
     pub fn apply(&mut self, samples: &mut [f32]) {
+
         for x in samples {
             let y = self.b0 * *x + self.z1;
             self.z1 = self.b1 * *x - self.a1 * y + self.z2;

@@ -89,12 +89,14 @@ impl Args {
         let mut filters = Vec::new();
         if let Some(cutoff) = self.lowpass {
             filters.push(Filter::lowpass(cutoff));
+            eprintln!("lowpass filter with cutoff frequency: {cutoff} Hz");
         }
 
         if let Some(params) = &self.bipolar {
             let [cutoff, q] = params.as_slice() else { unreachable!("clap requires exactly two values"); };
 
             filters.push(Filter::biquad_lowpass(*cutoff, *q));
+            eprintln!("biquad lowpass filter with cutoff frequency: {cutoff} Hz and Q factor: {q}");
         }
 
         return filters;
