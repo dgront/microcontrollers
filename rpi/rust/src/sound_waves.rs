@@ -131,6 +131,12 @@ impl Instrument {
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut (f32, SoundComponent)> {
         self.components.iter_mut()
     }
+
+    pub fn release(&mut self) {
+        for (_, component) in self.components.iter_mut() {
+            component.release();
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -164,5 +170,9 @@ impl Sound {
             }
         }
         self.timer += DT * (samples.len() as f64);
+    }
+
+    pub fn release(&mut self) {
+        self.instrument.release();
     }
 }

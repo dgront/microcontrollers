@@ -4,14 +4,18 @@ mod notes;
 mod sound_waves;
 mod scales;
 mod envelope;
+mod interactive;
 
 #[cfg(target_os = "linux")]
 use alsa::pcm::{Access, Format, HwParams, PCM};
 #[cfg(target_os = "linux")]
 use alsa::{Direction, ValueOr};
 
-use clap::{ArgGroup, Parser};
+#[cfg(not(target_os = "linux"))]
+use crate::devices::MockupPCM as PCM;
 
+use clap::{ArgGroup, Parser};
+use crate::interactive::play_interactive;
 use crate::sound_waves::{Instrument, Sound, SoundComponent, SoundWave};
 use crate::notes::Note;
 
@@ -42,6 +46,10 @@ struct Args {
     /// Notes per minute
     #[arg(long, default_value_t = 120.0)]
     npm: f32,
+
+    /// Interactive mode
+    #[arg(long)]
+    interactive: bool,
 }
 
 
@@ -68,30 +76,14 @@ impl Args {
 }
 
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-
-    let args = Args::parse();
-
-    // Open PCM5102A or its mockup
-    let pcm = devices::initialize_pcm()?;
-
-    // what to play
-    let notes_to_play = vec![Note::A];
-
-    // Select instrument
-    let envelope = envelope::ADSREnvelope::new(0.05, 0.35, 0.5, 1.0, 0.3, 0.1);
-    eprintln!("Using envelope:\n{}", envelope);
-    let mut instrument
-        = Instrument::single_component(SoundComponent::new(args.wave_type(), envelope));
-    let n_blocks: usize = args.blocks_per_note();
-    eprintln!("Playing {} notes, {} blocks per note", notes_to_play.len(), n_blocks);
+fn play_notes(notes_to_play: &[Note], instrument: &Instrument, blocks_per_note: usize, pcm: &PCM) -> Result<(), Box<dyn std::error::Error>> {
 
     let mut mono = [0_i16; settings::BLOCK];
     let mut signals = [0_i16; settings::BLOCK * settings::CHANNELS];
     let io = pcm.io_i16()?;
     for note in notes_to_play {
-        let mut sound = Sound::new(note, 4, instrument.clone());
-        for _ in 0..n_blocks {
+        let mut sound = Sound::new(*note, 4, instrument.clone());
+        for _ in 0..blocks_per_note {
             // Clear the buffer after each block
             mono.fill(0);
             // Generate one block of the mono sound
@@ -110,7 +102,33 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
     }
-    pcm.drain()?;
+    Ok(())
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+
+    let args = Args::parse();
+
+    // Open PCM5102A or its mockup
+    let pcm = devices::initialize_pcm()?;
+
+    // what to play
+    let notes_to_play = vec![Note::A];
+
+    // Select instrument
+    let envelope = envelope::ADSREnvelope::new(0.05, 0.35, 0.5, 1.0, 0.3, 0.1);
+    eprintln!("Using envelope:\n{}", envelope);
+    let mut instrument
+        = Instrument::single_component(SoundComponent::new(args.wave_type(), envelope));
+    let n_blocks: usize = args.blocks_per_note();
+    eprintln!("Playing {} notes, {} blocks per note", notes_to_play.len(), n_blocks);
+
+    if args.interactive {
+        return play_interactive(&pcm, instrument);
+    } else {
+        play_notes(&notes_to_play, &mut instrument, n_blocks, &pcm)?;
+    }
+    // pcm.drain()?;
     Ok(())
 }
 
