@@ -65,15 +65,3 @@ impl FromStr for Note {
 }
 
 
-#[derive(Debug, Clone, Copy)]
-pub struct Pitch {
-    pub note: Note,
-    pub octave: u16,
-}
-
-impl Pitch {
-    pub fn frequency(self) -> f64 {
-        self.note.octave_frequency(self.octave)
-    }
-}
-
