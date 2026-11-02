@@ -55,6 +55,9 @@ struct Args {
     #[arg(long, num_args = 2, value_names = ["CUTOFF", "Q"])]
     moog_ladder: Option<Vec<f64>>,
 
+    #[arg(long, num_args = 2, value_names = ["N_OSCILLATORS", "DETUNE_FRACTION"])]
+    unison: Option<Vec<f64>>,
+
     /// Notes per minute
     #[arg(long, default_value_t = 120.0)]
     npm: f32,
@@ -172,8 +175,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Select instrument
     let envelope = envelope::ADSREnvelope::new(0.05, 0.35, 0.5, 3.0, 0.3, 0.1);
     eprintln!("Using envelope:\n{}", envelope);
+    let mut wave = args.wave_type();
+    if let Some(unison_params) = &args.unison {
+        let [n_oscillators, detune_fraction] = unison_params.as_slice() else { unreachable!("clap requires exactly two values"); };
+        wave = SoundWave::unison(wave, *n_oscillators as u8, *detune_fraction);
+        eprintln!("Using unison with {} oscillators and detune fraction {}", n_oscillators, detune_fraction);
+    }
     let mut instrument
-        = Instrument::single_component(SoundComponent::new(args.wave_type(), envelope));
+        = Instrument::single_component(SoundComponent::new(wave, envelope));
     let filters = args.filters();
     let n_blocks: usize = args.blocks_per_note();
     eprintln!("Playing {} notes, {} blocks per note", notes_to_play.len(), n_blocks);
