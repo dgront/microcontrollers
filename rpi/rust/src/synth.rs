@@ -25,8 +25,7 @@ use crate::notes::Note;
 #[command(version, about = "PCM5102A waveform synthesizer")]
 #[command(group(
     ArgGroup::new("waveform")
-        .args(["sin", "sin_abs", "sin_sqr", "sawtooth", "rectangular", "piano"])
-        .multiple(false)
+        .args(["sin", "sin_sqr", "sawtooth", "square", "triangle", "pulse"]).multiple(false)
 ))]
 
 struct Args {
@@ -35,6 +34,9 @@ struct Args {
 
     #[arg(long)]
     sin_sqr: bool,
+
+    #[arg(long)]
+    triangle: bool,
 
     #[arg(long)]
     sawtooth: bool,
@@ -83,6 +85,8 @@ impl Args {
             SoundWave::sine_sqr(1.0)
         } else if self.sin {
             SoundWave::sine(1.0)
+        } else if self.triangle {
+            SoundWave::triangle(1.0)
         } else if self.sawtooth {
             SoundWave::sawtooth(1.0)
         } else if self.square {
