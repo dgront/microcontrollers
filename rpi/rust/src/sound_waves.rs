@@ -21,6 +21,7 @@ pub enum SoundWave {
     SineSqr { ratio: f64, detune_fract: f64 },
     Sawtooth { ratio: f64, detune_fract: f64 },
     Square { ratio: f64, detune_fract: f64 },
+    Triangle { ratio: f64, detune_fract: f64 },
     Pulse { ratio: f64, duty: f64, detune_fract: f64 },
     Mix { waves: Vec<SoundWave> },
 }
@@ -35,6 +36,8 @@ impl SoundWave {
     pub fn sawtooth(ratio: f64) -> Self { Self::Sawtooth { ratio, detune_fract: 0.0 } }
 
     pub fn square(ratio: f64) -> Self { Self::Square { ratio, detune_fract: 0.0 } }
+
+    pub fn triangle(ratio: f64) -> Self { Self::Triangle { ratio, detune_fract: 0.0 } }
 
     pub fn pulse(ratio: f64, duty: f64) -> Self { Self::Pulse { ratio, duty, detune_fract: 0.0 } }
 
@@ -87,6 +90,10 @@ impl SoundWave {
                             ratio,
                             detune_fract: detune_fract + voice_detune_offset,
                         },
+                        SoundWave::Triangle { ratio, detune_fract } => SoundWave::Triangle {
+                            ratio,
+                            detune_fract: detune_fract + voice_detune_offset,
+                        },
                         SoundWave::Pulse { ratio, duty, detune_fract } => SoundWave::Pulse {
                             ratio,
                             duty,
@@ -109,6 +116,8 @@ impl SoundWave {
     /// Sound sampling starts at `start` seconds, with a time step of `settings::DT` seconds between samples.
     /// The number of samples is determined by the length of the `out` buffer.
     /// Returns the time of the next sample after the last one.
+    ///
+    /// **Note:** this method overwrites the contents of the `out` buffer with the generated samples.
     fn sample(&self, start: f64, freq: f64, out: &mut [f32]) -> f64 {
 
         match self {
@@ -118,7 +127,8 @@ impl SoundWave {
                 let step = TAU * frequency * DT;
 
                 for sample in out.iter_mut() {
-                    *sample = phase.sin() as f32;
+                    let v = phase.sin() as f32;
+                    *sample = v*v;
                     phase = (phase + step).rem_euclid(TAU);
                 }
             }
@@ -132,7 +142,16 @@ impl SoundWave {
                     phase = (phase + step).rem_euclid(TAU);
                 }
             }
+            Self::Triangle { ratio, detune_fract } => {
+                let frequency = calculate_frequency(freq, *ratio, *detune_fract);
+                let step = frequency * DT;
+                let mut phase = (frequency * start).rem_euclid(1.0);
 
+                for sample in out.iter_mut() {
+                    *sample = (4.0 * (phase - 0.5).abs() - 1.0) as f32;
+                    phase = (phase + step).rem_euclid(1.0);
+                }
+            }
             Self::Sawtooth { ratio, detune_fract } => {
                 let frequency = calculate_frequency(freq, *ratio, *detune_fract);
                 let step = frequency * DT;
