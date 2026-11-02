@@ -4,6 +4,7 @@ use crate::settings::{RATE};
 pub enum Filter {
     LowPass(LowPass),
     Biquad(Biquad),
+    MoogLadder(MoogLadder),
     Echo(Echo)
 }
 
@@ -17,6 +18,10 @@ impl Filter {
         Filter::Biquad(Biquad::new(cutoff, q))
     }
 
+    pub fn moog_ladder(cutoff: f64, q: f64) -> Self {
+        Filter::MoogLadder(MoogLadder::new(cutoff, q))
+    }
+
     pub fn echo(delay_seconds: f64, feedback: f64, mix: f64) -> Self {
         Filter::Echo(Echo::new(delay_seconds, feedback, mix))
     }
@@ -25,7 +30,8 @@ impl Filter {
         match self {
             Filter::LowPass(f) => f.apply(samples),
             Filter::Biquad(f) => f.apply(samples),
-            Filter::Echo(f) => f.apply(samples)
+            Filter::Echo(f) => f.apply(samples),
+            Filter::MoogLadder(f) => f.apply(samples)
         }
     }
 }
@@ -92,6 +98,67 @@ impl Biquad {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct MoogLadder {
+    pub cutoff: f64,
+    pub resonance: f64,
+    // Memory for the 4 stages of the ladder filter
+    s: [f64; 4],
+}
+
+impl MoogLadder {
+    pub fn new(cutoff: f64, resonance: f64) -> Self {
+        // Resonance is clamped to avoid instability in the filter
+        Self { cutoff, resonance: resonance.clamp(0.0, 3.95), s: [0.0; 4] }
+    }
+
+    pub fn apply(&mut self, audio_buffer: &mut [f32]) {
+
+        let g = (std::f64::consts::PI * self.cutoff / RATE as f64).tan();
+        let h = g / (1.0 + g);
+        for sample in audio_buffer.iter_mut() {
+
+            let input = *sample as f64;
+
+            /// Decay
+            let s0 = self.s[0] / (1.0 + g);
+            let s1 = self.s[1] / (1.0 + g);
+            let s2 = self.s[2] / (1.0 + g);
+            let s3 = self.s[3] / (1.0 + g);
+
+            let s_sum = h * h * h * s0 + h * h * s1 + h * s2 + s3;
+
+            // 3. Główne równanie pętli sprzężenia zwrotnego (Zero-Delay Feedback)
+            let mut g_pow4 = h * h;
+            g_pow4 *= g_pow4; // h^4
+            let denominator = 1.0 + self.resonance * g_pow4;
+            let u = (input - self.resonance * s_sum) / denominator;
+
+            // 4. Przepuszczenie sygnału przez 4 stopnie drabinowe (One-Pole TPT)
+            // Stopień 1
+            let v0 = (u - self.s[0]) * h;
+            let out0 = v0 + self.s[0];
+            self.s[0] = out0 + v0;
+
+            // Stopień 2
+            let v1 = (out0 - self.s[1]) * h;
+            let out1 = v1 + self.s[1];
+            self.s[1] = out1 + v1;
+
+            // Stopień 3
+            let v2 = (out1 - self.s[2]) * h;
+            let out2 = v2 + self.s[2];
+            self.s[2] = out2 + v2;
+
+            // Stopień 4 (Wyjście końcowe filtra)
+            let v3 = (out2 - self.s[3]) * h;
+            let out3 = v3 + self.s[3];
+            self.s[3] = out3 + v3;
+
+            *sample = out3.clamp(-1.0, 1.0) as f32;
+        }
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct Echo {

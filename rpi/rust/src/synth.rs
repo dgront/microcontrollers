@@ -52,6 +52,9 @@ struct Args {
     #[arg(long, num_args = 2, value_names = ["CUTOFF", "Q"])]
     biquad: Option<Vec<f64>>,
 
+    #[arg(long, num_args = 2, value_names = ["CUTOFF", "Q"])]
+    moog_ladder: Option<Vec<f64>>,
+
     /// Notes per minute
     #[arg(long, default_value_t = 120.0)]
     npm: f32,
@@ -106,6 +109,13 @@ impl Args {
 
             filters.push(Filter::biquad_lowpass(*cutoff, *q));
             eprintln!("biquad lowpass filter with cutoff frequency: {cutoff} Hz and Q factor: {q}");
+        }
+
+        if let Some(params) = &self.moog_ladder {
+            let [cutoff, q] = params.as_slice() else { unreachable!("clap requires exactly two values"); };
+
+            filters.push(Filter::moog_ladder(*cutoff, *q));
+            eprintln!("Moog-ladder filter with cutoff frequency: {cutoff} Hz and Q factor: {q}");
         }
 
         if let Some(delay) = self.echo {
