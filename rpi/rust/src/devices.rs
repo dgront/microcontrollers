@@ -76,9 +76,9 @@ mod linux {
                 // Require the exact sampling rate used by the synth.
                 hwp.set_rate(SAMPLING_RATE as u32, ValueOr::Nearest)?;
 
-                let period = hwp.set_period_size_near(ALSA_PERIOD_FRAMES as i64, ValueOr::Nearest)?;
+                let period = hwp.set_period_size_near(ALSA_PERIOD_FRAMES as i32, ValueOr::Nearest)?;
 
-                let buffer = hwp.set_buffer_size_near(ALSA_BUFFER_FRAMES as i64)?;
+                let buffer = hwp.set_buffer_size_near(ALSA_BUFFER_FRAMES as i32)?;
 
                 pcm.hw_params(&hwp)?;
 
@@ -97,12 +97,11 @@ mod linux {
 
         pub fn write(&mut self, samples: &[f32]) -> AudioResult<()> {
             assert_eq!(samples.len() % CHANNELS, 0, "Audio buffer must contain complete frames");
+	    assert_eq!(samples.len(), self.output.len());
 
-            // Reuse the conversion buffer between writes.
-            self.output.clear();
-            self.output.extend(samples.iter().map(|&sample| {
-                        (sample.clamp(-1.0, 1.0) as f64 * i32::MAX as f64) as i32
-            }));
+	    for (src, dst) in samples.iter().zip(self.output.iter_mut()) {
+	        *dst = (src.clamp(-1.0, 1.0) as f64 * i32::MAX as f64) as i32;
+	    }
 
             let io = self.pcm.io_i32()?;
             let frames = self.output.len() / CHANNELS;
