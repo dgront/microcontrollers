@@ -10,13 +10,17 @@ clap = { version = "4", features = ["derive"] }
 alsa = "0.9"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-cpal = "0.15"
+portaudio = "0.8"
 
 [[bin]]
-name = "test32"
-path = "./src/test_i32.rs"
+name = "synth"
+path = "src/synth.rs"
 
-[[bin]]
-name = "test16"
-path = "./src/test_i16.rs"
+#[[bin]]
+#name = "test32"
+#path = "./src/test_i32.rs"
+#
+#[[bin]]
+#name = "test16"
+#path = "./src/test_i16.rs"
 

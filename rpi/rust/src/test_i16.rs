@@ -39,7 +39,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(target_os = "macos")]
     {
         println!("backend CPAL (macOS)...");
-        run_cpal_backend(&mut synth, sample_rate)?;
+        run_cpal_backend( synth, sample_rate)?;
     }
 
     Ok(())
@@ -96,7 +96,7 @@ eprintln!("Can't write to device: {:?}", err);
 
 // =========================================================================
 #[cfg(target_os = "macos")]
-fn run_cpal_backend(synth: &mut SynthEngine, sample_rate: f32) -> Result<(), Box<dyn std::error::Error>> {
+fn run_cpal_backend(synth: SynthEngine, sample_rate: f32) -> Result<(), Box<dyn std::error::Error>> {
     use std::sync::{Arc, Mutex};
 
     let host = cpal::default_host();
