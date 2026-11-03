@@ -1,0 +1,22 @@
+[package]
+name = "synth"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+alsa = "0.9"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+cpal = "0.15"
+
+[[bin]]
+name = "test32"
+path = "./src/test_i32.rs"
+
+[[bin]]
+name = "test16"
+path = "./src/test_i16.rs"
+
