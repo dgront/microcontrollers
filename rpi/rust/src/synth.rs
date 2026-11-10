@@ -2,20 +2,23 @@ mod devices;
 mod oscillator;
 mod settings;
 
+mod module;
+mod synthetizer;
+mod keyboard;
+
 use devices::Device;
-use oscillator::Oscillator;
-use settings::*;
+use module::*;
+use crate::synthetizer::Synthesizer;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut device = Device::new()?;
-    let mut oscillator = Oscillator::new(DEFAULT_FREQUENCY);
 
-    let mut buffer = vec![0.0_f32; BUFFER_FRAMES * CHANNELS];
+    env_logger::init();
+
+    let device = Device::new()?;
+    let mut s = Synthesizer::new(device);
 
     println!("Synthesizer running. Press Ctrl+C to stop.");
+    s.run()?;
 
-    loop {
-        oscillator.fill_buffer(&mut buffer);
-        device.write(&buffer)?;
-    }
+    return Ok(());
 }

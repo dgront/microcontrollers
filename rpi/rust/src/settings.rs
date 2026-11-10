@@ -3,7 +3,6 @@ pub const CHANNELS: usize = 2;
 
 pub const BUFFER_FRAMES: usize = 256;
 pub const ALSA_PERIOD_FRAMES: usize = 128;
-pub const ALSA_BUFFER_FRAMES: usize = 512;
 
 pub const DEFAULT_FREQUENCY: f64 = 440.0;
 pub const MASTER_VOLUME: f32 = 0.5;
