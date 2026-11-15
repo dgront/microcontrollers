@@ -1,7 +1,7 @@
 use std::sync::mpsc::SyncSender;
 use log::info;
-use crate::module::{PortId, RtMessage};
-use crate::module::Parameter::{Frequency, Gate};
+use crate::modules::{PortId, RtMessage};
+use crate::modules::Parameter::{Frequency, Gate};
 
 pub struct Keyboard {
     tx: SyncSender<RtMessage>,

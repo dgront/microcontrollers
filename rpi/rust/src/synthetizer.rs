@@ -2,9 +2,9 @@
 use std::sync::mpsc::{sync_channel, Receiver, SyncSender};
 use crate::devices::{AudioResult, Device};
 use crate::keyboard::Keyboard;
-use crate::module::{Module, RtMessage};
-use crate::module::Parameter::{Frequency, Gate};
-use crate::oscillator::Oscillator;
+use crate::modules::{Module, RtMessage};
+use crate::modules::Parameter::{Frequency, Gate};
+use crate::modules::Oscillator;
 use crate::settings::{BUFFER_FRAMES, CHANNELS};
 
 pub struct Synthesizer {

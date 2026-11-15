@@ -28,8 +28,9 @@ impl FromStr for PortId {
 }
 
 pub enum Parameter {
-    Frequency(f32),
-    Volume(f32),
+    Frequency(f64),
+    FrequencyRatio(f64),
+    Volume(f64),
     Waveform(SoundWave),
     Gate(bool),
 }

@@ -1,11 +1,15 @@
 use std::f64::consts::TAU;
 use log::info;
 use crate::Module;
-use crate::module::Parameter;
+use crate::modules::Parameter;
 use crate::settings::{CHANNELS, MASTER_VOLUME, SAMPLING_RATE, BUFFER_FRAMES};
 
 pub struct Oscillator {
     phase: f64,
+    /// The frequency ratio relative to the base frequency.
+    ///
+    /// To detune this oscillator, use number slightly above or below 1.0, e.g., 0.99 or 1.01.
+    /// To change octave, use 0.5, or 2.0 for one octave down or up, respectively.
     frequency_ratio: f64,
     frequency: f64,
     name: String,
@@ -13,13 +17,17 @@ pub struct Oscillator {
 }
 
 impl Module for Oscillator {
-    fn name(&self) -> &str { &self.name }
-
     fn set_parameter(&mut self, value: Parameter) {
         match value {
             Parameter::Frequency(freq) => {
-                self.frequency = freq as f64;
+                self.frequency = freq * self.frequency_ratio;
                 info!("Oscillator {} frequency set to {} Hz", self.name, self.frequency);
+            },
+            Parameter::FrequencyRatio(ratio) => {
+                self.frequency_ratio = ratio;
+                self.frequency = self.frequency * self.frequency_ratio;
+                info!("Oscillator {} frequency_ratio set to {} and frequency to {} Hz",
+                    self.name, self.frequency_ratio, self.frequency);
             },
             Parameter::Gate(state) => {
                 self.gate = state;
@@ -31,6 +39,8 @@ impl Module for Oscillator {
             _ => {}
         }
     }
+
+    fn name(&self) -> &str { &self.name }
 }
 
 impl Oscillator {
