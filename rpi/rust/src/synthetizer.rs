@@ -1,6 +1,5 @@
 
 use std::sync::mpsc::{sync_channel, Receiver, SyncSender};
-use std::time::Duration;
 use crate::devices::{AudioResult, Device};
 use crate::keyboard::Keyboard;
 use crate::module::{Module, RtMessage};
