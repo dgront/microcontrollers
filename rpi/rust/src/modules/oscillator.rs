@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use log::info;
 use crate::Module;
-use crate::modules::{Input, Parameter, SoundWave};
-
+use crate::modules::{Input, Parameter};
+use crate::sound::SoundWave;
 
 pub struct Oscillator {
     phase: f64,

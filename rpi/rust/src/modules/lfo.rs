@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use log::info;
-use crate::modules::{Input, Module, Parameter, SoundWave};
+use crate::modules::{Input, Module, Parameter};
+use crate::sound::SoundWave;
 
 pub struct LFO {
     phase: f64,

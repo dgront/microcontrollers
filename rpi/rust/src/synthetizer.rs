@@ -70,8 +70,7 @@ impl Synthesizer {
             for step in &self.pipeline {
                 let output_idx = step.output;
 
-                // Split buffers to borrow the output mutably
-                // and earlier input buffers immutably.
+                // Split buffers to borrow the output mutably and earlier input buffers immutably.
                 let (before, output_and_after) =
                     self.buffers.split_at_mut(output_idx);
 

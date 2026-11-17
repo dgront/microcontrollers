@@ -4,6 +4,7 @@ mod settings;
 mod modules;
 mod keyboard;
 mod synthetizer;
+mod sound;
 
 use std::collections::HashMap;
 use devices::Device;
