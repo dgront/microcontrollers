@@ -1,16 +1,18 @@
+use std::collections::HashSet;
 use std::sync::mpsc::SyncSender;
 use log::info;
-use crate::modules::{PortId, RtMessage};
+use crate::modules::{RtMessage};
 use crate::modules::Parameter::{Frequency, Gate};
 
 pub struct Keyboard {
     tx: SyncSender<RtMessage>,
-    frequency_port: PortId,
+    frequency_ports: HashSet<String>,
+    gate_ports: HashSet<String>,
 }
 
 impl Keyboard {
-    pub fn new(tx: SyncSender<RtMessage>, frequency_port: PortId) -> Self {
-        Self { tx, frequency_port }
+    pub fn new(tx: SyncSender<RtMessage>) -> Self {
+        Self { tx, frequency_ports: HashSet::new(), gate_ports: HashSet::new() }
     }
 
     pub fn run(&self) {
@@ -19,21 +21,44 @@ impl Keyboard {
         for line in io::stdin().lock().lines().flatten() {
             info!("Keyboard input: {}", line.trim());
             if line.trim() == "a" {
-                let _ = self.tx.try_send(RtMessage {
-                    port: self.frequency_port.clone(),
-                    value: Frequency(440.0), // A4 frequency
-                });
-                let _ = self.tx.try_send(RtMessage {
-                    port: self.frequency_port.clone(),
-                    value: Gate(true), // open the gate
-                });
-            }
+                for module in &self.frequency_ports {
+                    let _ = self.tx.try_send(RtMessage {
+                        receiver_module: module.clone(),
+                        value: Frequency(440.0),
+                    });
+                }
+                // Open gates.
+                for module in &self.gate_ports {
+                    let _ = self.tx.try_send(RtMessage {
+                        receiver_module: module.clone(),
+                        value: Gate(true),
+                    });
+                }            }
             if line.trim() == "" {
-                let _ = self.tx.try_send(RtMessage {
-                    port: self.frequency_port.clone(),
-                    value: Gate(false), // shut the gate
-                });
+                // Close gates.
+                for module in &self.gate_ports {
+                    let _ = self.tx.try_send(RtMessage {
+                        receiver_module: module.clone(),
+                        value: Gate(false),
+                    });
+                }
             }
         }
+    }
+
+    pub fn connect_frequency(&mut self, module: impl Into<String>) {
+        self.frequency_ports.insert(module.into());
+    }
+
+    pub fn connect_gate(&mut self, module: impl Into<String>) {
+        self.gate_ports.insert(module.into());
+    }
+
+    pub fn disconnect_frequency(&mut self, module: &str) {
+        self.frequency_ports.remove(module);
+    }
+
+    pub fn disconnect_gate(&mut self, module: &str) {
+        self.gate_ports.remove(module);
     }
 }

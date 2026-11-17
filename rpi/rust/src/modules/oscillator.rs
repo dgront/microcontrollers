@@ -1,8 +1,8 @@
-use std::f64::consts::TAU;
+use std::collections::HashMap;
 use log::info;
 use crate::Module;
-use crate::modules::Parameter;
-use crate::settings::{CHANNELS, MASTER_VOLUME, SAMPLING_RATE, BUFFER_FRAMES};
+use crate::modules::{Input, Parameter, SoundWave};
+
 
 pub struct Oscillator {
     phase: f64,
@@ -14,6 +14,7 @@ pub struct Oscillator {
     frequency: f64,
     name: String,
     gate: bool,
+    waveform: SoundWave,
 }
 
 impl Module for Oscillator {
@@ -36,34 +37,30 @@ impl Module for Oscillator {
                 }
                 info!("Oscillator {} gate set to {}", self.name, state);
             },
+            Parameter::Waveform(waveform) => {
+                self.waveform = waveform;
+                info!("Oscillator {} waveform set to {:?}", self.name, waveform);
+            },
             _ => {}
         }
     }
 
     fn name(&self) -> &str { &self.name }
+    
+    fn sample(&mut self, inputs: HashMap<Input, &[f32]>, output: &mut [f32]) {
+        match inputs.get(&Input::Frequency) {
+            Some(freq_input) if !freq_input.is_empty() => {
+                self.waveform.sample_modulated(&mut self.phase, self.frequency, freq_input, output);
+            }
+            _ => {
+                self.waveform.sample(&mut self.phase, self.frequency, output);
+            }
+        }
+    }
 }
 
 impl Oscillator {
     pub fn new(name: String) -> Self {
-        Self { phase: 0.0, frequency_ratio: 1.0, frequency: 440.0, name, gate: false }
-    }
-
-    #[inline(always)]
-    pub fn sample(&mut self) -> f32 {
-
-        if !self.gate { return 0.0; }
-
-        let value = (TAU * self.phase).sin() as f32;
-
-        self.phase = (self.phase + self.frequency / SAMPLING_RATE).fract();
-
-        value * MASTER_VOLUME
-    }
-
-    pub fn fill_buffer(&mut self, buffer: &mut [f32]) {
-        for frame in buffer.chunks_exact_mut(CHANNELS) {
-            let sample = self.sample();
-            frame.fill(sample);
-        }
+        Self { phase: 0.0, frequency_ratio: 1.0, frequency: 440.0, name, gate: false, waveform: SoundWave::Sine}
     }
 }
