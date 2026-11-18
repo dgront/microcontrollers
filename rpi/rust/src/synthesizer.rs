@@ -39,15 +39,15 @@ impl Synthesizer {
             return;
         }
 
-        // Ensure all referenced buffers exist.
+        // ---------- Ensure all referenced buffers exist.
         let max_index = inputs.values().copied().chain(std::iter::once(output)).max().unwrap();
-
+        // ---------- Create a new buffer if necessary. Initialize with zeros.
         self.buffers.resize(max_index + 1, [0.0; BUFFER_FRAMES]);
-
-        // Add the module to the processing pipeline.
+        // ---------- Add the module to the processing pipeline.
         self.pipeline.push(PipelineStep { module_id: module_name.to_string(), inputs, output});
     }
 
+    /// Send a message to a module in the synthesizer.
     pub fn send_message(&self, message: RtMessage) {
         let _ = self.tx.send(message);
     }

@@ -60,7 +60,7 @@ impl Module for Oscillator {
 }
 
 impl Oscillator {
-    pub fn new(name: String) -> Self {
-        Self { phase: 0.0, frequency_ratio: 1.0, frequency: 440.0, name, gate: false, waveform: SoundWave::Sine}
+    pub fn new(name: impl Into<String>) -> Self {
+        Self { phase: 0.0, frequency_ratio: 1.0, frequency: 440.0, name: name.into(), gate: false, waveform: SoundWave::Sine}
     }
 }

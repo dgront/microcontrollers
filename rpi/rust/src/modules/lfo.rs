@@ -13,8 +13,9 @@ pub struct LFO {
 }
 
 impl LFO {
-    pub fn new(name: String) -> Self {
-        Self { phase: 0.0,  frequency: 1.0, name, depth: 0.0 , gate: false, waveform: SoundWave::Sine}
+    pub fn new(name: impl Into<String>) -> Self {
+        Self { phase: 0.0,  frequency: 1.0, name: name.into(),
+            depth: 0.0 , gate: false, waveform: SoundWave::Sine}
     }
 }
 

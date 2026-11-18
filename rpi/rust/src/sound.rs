@@ -2,6 +2,7 @@ use std::f64::consts::TAU;
 use crate::settings::DT;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+/// Represents the type of waveform this synthesizer can generate.
 pub enum SoundWave {
     Sine,
     Square,
