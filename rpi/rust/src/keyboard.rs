@@ -22,25 +22,17 @@ impl Keyboard {
             info!("Keyboard input: {}", line.trim());
             if line.trim() == "a" {
                 for module in &self.frequency_ports {
-                    let _ = self.tx.try_send(RtMessage {
-                        receiver_module: module.clone(),
-                        value: Frequency(440.0),
-                    });
+                    let _ = self.tx.try_send(RtMessage::new(module.clone(), Frequency(440.0)));
                 }
                 // Open gates.
                 for module in &self.gate_ports {
-                    let _ = self.tx.try_send(RtMessage {
-                        receiver_module: module.clone(),
-                        value: Gate(true),
-                    });
-                }            }
+                    let _ = self.tx.try_send(RtMessage::new(module.clone(), Gate(true)));
+                }
+            }
             if line.trim() == "" {
                 // Close gates.
                 for module in &self.gate_ports {
-                    let _ = self.tx.try_send(RtMessage {
-                        receiver_module: module.clone(),
-                        value: Gate(false),
-                    });
+                    let _ = self.tx.try_send(RtMessage::new(module.clone(), Gate(false)));
                 }
             }
         }

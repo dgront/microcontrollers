@@ -48,6 +48,12 @@ impl Module for Oscillator {
     fn name(&self) -> &str { &self.name }
     
     fn sample(&mut self, inputs: HashMap<Input, &[f32]>, output: &mut [f32]) {
+        // ---------- Don't generate sound if the gate is closed
+        if self.gate == false {
+            output.fill(0.0);
+            return;
+        }
+
         match inputs.get(&Input::Frequency) {
             Some(freq_input) if !freq_input.is_empty() => {
                 self.waveform.sample_modulated(&mut self.phase, self.frequency, freq_input, output);

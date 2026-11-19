@@ -49,6 +49,11 @@ impl Module for LFO {
 
     /// LFO doesn't accept any input at that moment
     fn sample(&mut self, _inputs: HashMap<Input, &[f32]>, output: &mut [f32]) {
+        // ---------- Don't generate sound if the gate is closed
+        if self.gate == false {
+            output.fill(0.0);
+            return;
+        }
         // ---------- Generate the LFO waveform
         self.waveform.sample(&mut self.phase, self.frequency, output);
         // ---------- Apply depth to the output
