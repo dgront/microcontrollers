@@ -47,6 +47,10 @@ impl Synthesizer {
         self.pipeline.push(PipelineStep { module_id: module_name.to_string(), inputs, output});
     }
 
+    pub fn sender(&self) -> SyncSender<RtMessage> {
+        self.tx.clone()
+    }
+
     /// Send a message to a module in the synthesizer.
     pub fn send_message(&self, message: RtMessage) {
         let _ = self.tx.send(message);
@@ -54,10 +58,10 @@ impl Synthesizer {
 
     pub fn run(&mut self) -> AudioResult<()> {
 
-        let keyboard = Keyboard::new(self.tx.clone());
-
-        // Spawn a separate thread to run the keyboard input loop.
-        std::thread::spawn(move || keyboard.run());
+        // let keyboard = Keyboard::new(self.tx.clone());
+        //
+        // // Spawn a separate thread to run the keyboard input loop.
+        // std::thread::spawn(move || keyboard.run());
 
         let mut buffer = [0.0f32; BUFFER_FRAMES * CHANNELS];
 
