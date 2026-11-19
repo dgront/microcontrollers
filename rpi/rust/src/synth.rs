@@ -38,8 +38,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     keyboard.connect_gate("Wave1");
     std::thread::spawn(move || keyboard.run());     // Spawn a separate thread to run the keyboard input loop.
 
-    // s.send_message(RtMessage::new("LFO1", Parameter::Gate(true)));
-    s.send_message(RtMessage::new("LFO1", Parameter::Depth(0.01)));
+    s.send_message(RtMessage::new("LFO1", Parameter::Gate(true)));
+    s.send_message(RtMessage::new("LFO1", Parameter::Depth(0.02)));
     println!("Synthesizer running. Press Ctrl+C to stop.");
     s.run()?;
 

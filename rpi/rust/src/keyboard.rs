@@ -1,9 +1,12 @@
 use std::collections::HashSet;
 use std::sync::mpsc::SyncSender;
-use log::info;
+use std::str::FromStr;
+use log::{debug, info};
+
 use crate::modules::{RtMessage};
-use crate::modules::Parameter::{Frequency, Gate};
+use crate::modules::Parameter::{Frequency, Gate, Waveform};
 use crate::notes::Note;
+use crate::sound::SoundWave;
 
 pub struct Keyboard {
     tx: SyncSender<RtMessage>,
@@ -17,20 +20,55 @@ impl Keyboard {
         Self { tx, frequency_ports: HashSet::new(), gate_ports: HashSet::new(), octave: 4 }
     }
 
-    pub fn run(&self) -> Result<(), String> {
+    pub fn run(&mut self) -> Result<(), String> {
         use std::io::{self, BufRead};
 
-        for line in io::stdin().lock().lines().flatten() {
-            info!("Keyboard input: {}", line.trim());
-            let name = "A";
-            if line.trim() == "a" {
-                let note = name.parse::<Note>().map_err(|_| format!("Invalid note: {name}"))?;
-                self.send_note_on(note.octave_frequency(self.octave));
-            }
-            if line.trim() == "" {
-                // Close gates.
-                for module in &self.gate_ports {
-                    let _ = self.tx.try_send(RtMessage::new(module.clone(), Gate(false)));
+        for line in io::stdin().lock().lines() {
+
+            let Ok(line) = line else { break; };
+            let input = line.trim();
+            debug!("Keyboard input: {}", &input);
+
+            match input {
+                "+" => {
+                    self.octave = self.octave.saturating_add(1);
+                    info!("Octave: {}", self.octave);
+                }
+
+                "-" => {
+                    self.octave = self.octave.saturating_sub(1);
+                    info!("Octave: {}", self.octave);
+                }
+                "w" => {
+                    self.send_waveform(SoundWave::Sawtooth);
+                }
+
+                "s" => {
+                    self.send_waveform(SoundWave::Square);
+                }
+
+                "t" => {
+                    self.send_waveform(SoundWave::Triangle);
+                }
+
+                "i" => {
+                    self.send_waveform(SoundWave::Sine);
+                }
+                "" => {     // Close gates.
+                    for module in &self.gate_ports {
+                        let _ = self.tx.try_send(RtMessage::new(module.clone(), Gate(false)));
+                    }
+                }
+                _ => {
+                    match Note::from_str(input) {
+                        Ok(note) => {
+                            self.send_note_on(note.octave_frequency(self.octave));
+                        }
+
+                        Err(_) => {
+                            eprintln!("Invalid keyboard input: {input}");
+                        }
+                    }
                 }
             }
         }
@@ -60,6 +98,12 @@ impl Keyboard {
         }
         for module in &self.gate_ports {
             let _ = self.tx.try_send(RtMessage::new(module.clone(), Gate(true)));
+        }
+    }
+
+    fn send_waveform(&self, wave_type: SoundWave) {
+        for module in &self.frequency_ports {
+            let _ = self.tx.try_send(RtMessage::new(module.clone(), Waveform(wave_type)));
         }
     }
 }
