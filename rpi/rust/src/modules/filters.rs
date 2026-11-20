@@ -2,6 +2,18 @@ use std::collections::HashMap;
 use crate::modules::{Input, Module, Parameter};
 use crate::settings::SAMPLING_RATE;
 
+
+macro_rules! filter_sample {
+    () => {
+        fn sample(&mut self, inputs: HashMap<Input, &[f32]>, output: &mut [f32]) {
+            let audio = inputs.get(&Input::AudioIn).expect("Filter requires AudioIn");
+
+            output.copy_from_slice(audio);
+            self.apply(output);
+        }
+    };
+}
+
 #[derive(Debug, Clone)]
 pub struct LowPassFilter {
     alpha: f32,
@@ -28,6 +40,7 @@ impl LowPassFilter {
     }
 }
 
+
 impl Module for LowPassFilter {
     fn set_parameter(&mut self, value: Parameter) {
         match value {
@@ -40,16 +53,7 @@ impl Module for LowPassFilter {
 
     fn name(&self) -> &str { return &self.name; }
 
-    fn sample(&mut self, inputs: HashMap<Input, &[f32]>, output: &mut [f32]) {
-
-        // ---------- Get the audio input.
-        let audio = inputs.get(&Input::AudioIn).expect("LowPassFilter requires AudioIn");
-        // ---------- Copy the input signal into the output buffer.
-        output.copy_from_slice(audio);
-
-        // ---------- Apply the envelope in place.
-        self.apply(output);
-    }
+    filter_sample!();
 }
 
 
@@ -72,22 +76,12 @@ pub struct BiquadFilter {
 impl BiquadFilter {
     pub fn new(name: impl Into<String>, cutoff: f64, resonance: f64) -> Self {
         let mut filter = Self {
-            name: name.into(),
-            cutoff,
-            resonance,
-
-            b0: 0.0,
-            b1: 0.0,
-            b2: 0.0,
-            a1: 0.0,
-            a2: 0.0,
-
-            z1: 0.0,
-            z2: 0.0,
+            name: name.into(), cutoff, resonance,
+            b0: 0.0, b1: 0.0, b2: 0.0, a1: 0.0, a2: 0.0, z1: 0.0, z2: 0.0
         };
 
         filter.update_coefficients();
-        filter
+        return filter;
     }
 
     pub fn set_cutoff(&mut self, cutoff: f64) {
@@ -101,8 +95,7 @@ impl BiquadFilter {
     }
 
     fn update_coefficients(&mut self) {
-        let w = 2.0 * std::f64::consts::PI
-            * self.cutoff / SAMPLING_RATE as f64;
+        let w = 2.0 * std::f64::consts::PI * self.cutoff / SAMPLING_RATE as f64;
 
         let (sin, cos) = w.sin_cos();
         let alpha = sin / (2.0 * self.resonance);
@@ -141,14 +134,5 @@ impl Module for BiquadFilter {
 
     fn name(&self) -> &str { return &self.name; }
 
-    fn sample(&mut self, inputs: HashMap<Input, &[f32]>, output: &mut [f32]) {
-
-        // ---------- Get the audio input.
-        let audio = inputs.get(&Input::AudioIn).expect("LowPassFilter requires AudioIn");
-        // ---------- Copy the input signal into the output buffer.
-        output.copy_from_slice(audio);
-
-        // ---------- Apply the envelope in place.
-        self.apply(output);
-    }
+    filter_sample!();
 }
