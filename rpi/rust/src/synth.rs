@@ -33,7 +33,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         0.05, 0.35, 0.5, 1.0, 0.3, 0.1);
     s.add_module(Box::new(envelope));
 
-    let filter = LowPassFilter::new("LP1", 880.0);
+    // let filter = LowPassFilter::new("Filter1", 880.0);
+    let filter = BiquadFilter::new("Filter1", 880.0, 0.8);
     s.add_module(Box::new(filter));
 
     // ---------- LFO takes no input and writes to buffer 0
@@ -41,7 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ---------- Oscillator takes frequency input from buffer 0 and writes to buffer 1
     s.add_connection("Wave1", HashMap::from([(Input::Frequency, 0)]), 1);
     // ---------- Filter takes audio input from buffer 1 and writes to buffer 2
-    s.add_connection("LP1", HashMap::from([(Input::AudioIn, 1)]), 2);
+    s.add_connection("Filter1", HashMap::from([(Input::AudioIn, 1)]), 2);
     // ---------- Envelope takes audio input from buffer 2 and writes to buffer 3
     s.add_connection("Env1", HashMap::from([(Input::AudioIn, 2)]), 3);
 
