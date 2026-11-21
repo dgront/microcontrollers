@@ -76,9 +76,9 @@ mod linux {
                 // Require the exact sampling rate used by the synth.
                 hwp.set_rate(SAMPLING_RATE as u32, ValueOr::Nearest)?;
 
-                let period = hwp.set_period_size_near(ALSA_PERIOD_FRAMES as i32, ValueOr::Nearest)?;
+                let period = hwp.set_period_size_near(PERIOD_FRAMES as i32, ValueOr::Nearest)?;
 
-                let buffer = hwp.set_buffer_size_near(ALSA_BUFFER_FRAMES as i32)?;
+                let buffer = hwp.set_buffer_size_near(BUFFER_FRAMES as i32)?;
 
                 pcm.hw_params(&hwp)?;
 

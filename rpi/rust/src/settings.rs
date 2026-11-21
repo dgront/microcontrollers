@@ -4,7 +4,7 @@ pub const DT: f64 = 1.0 / SAMPLING_RATE;
 pub const CHANNELS: usize = 2;
 
 pub const BUFFER_FRAMES: usize = 256;
-pub const ALSA_PERIOD_FRAMES: usize = 128;
+pub const PERIOD_FRAMES: usize = 128;
 
 pub const DEFAULT_FREQUENCY: f64 = 440.0;
 pub const MASTER_VOLUME: f32 = 0.5;
