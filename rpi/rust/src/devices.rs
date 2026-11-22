@@ -96,12 +96,13 @@ mod linux {
         }
 
         pub fn write(&mut self, samples: &[f32]) -> AudioResult<()> {
-            assert_eq!(samples.len() % CHANNELS, 0, "Audio buffer must contain complete frames");
-	    assert_eq!(samples.len(), self.output.len());
 
-	    for (src, dst) in samples.iter().zip(self.output.iter_mut()) {
-	        *dst = (src.clamp(-1.0, 1.0) as f64 * i32::MAX as f64) as i32;
-	    }
+            assert_eq!(samples.len() % CHANNELS, 0, "Audio buffer must contain complete frames");
+	        assert_eq!(samples.len(), self.output.len());
+
+            for (src, dst) in samples.iter().zip(self.output.iter_mut()) {
+                *dst = (src.clamp(-1.0, 1.0) as f64 * i32::MAX as f64) as i32;
+            }
 
             let io = self.pcm.io_i32()?;
             let frames = self.output.len() / CHANNELS;
@@ -115,6 +116,10 @@ mod linux {
                     }
                     Ok(n) => {
                         written += n;
+                    }
+                    Err(err) if err.errno() == alsa::nix::errno::Errno::EPIPE as i32 => {
+                        eprintln!("ALSA underrun!");
+                        pcm.prepare()?;
                     }
                     Err(err) => {
                         self.pcm.recover(err.errno(), true)?;
