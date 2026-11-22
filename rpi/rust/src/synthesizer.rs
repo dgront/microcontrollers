@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::sync::mpsc::{sync_channel, Receiver, SyncSender};
 use crate::devices::{AudioResult, Device};
-use crate::keyboard::Keyboard;
 use crate::modules::{Input, Module, RtMessage};
 use crate::settings::{BUFFER_FRAMES, CHANNELS};
 

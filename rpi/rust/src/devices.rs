@@ -101,7 +101,7 @@ mod linux {
 	        assert_eq!(samples.len(), self.output.len());
 
             for (src, dst) in samples.iter().zip(self.output.iter_mut()) {
-                *dst = (src.clamp(-1.0, 1.0) as f64 * i32::MAX as f64) as i32;
+                *dst = (src.clamp(-1.0, 1.0) as f64 * i32::MAX as f64 * MASTER_VOLUME) as i32;
             }
 
             let io = self.pcm.io_i32()?;
@@ -117,9 +117,9 @@ mod linux {
                     Ok(n) => {
                         written += n;
                     }
-                    Err(err) if err.errno() == alsa::nix::errno::Errno::EPIPE as i32 => {
+                    Err(err) if err.errno() == 32 => {
                         eprintln!("ALSA underrun!");
-                        pcm.prepare()?;
+                        self.pcm.prepare()?;
                     }
                     Err(err) => {
                         self.pcm.recover(err.errno(), true)?;
