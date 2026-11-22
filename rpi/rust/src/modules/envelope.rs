@@ -106,11 +106,19 @@ impl ADSREnvelope {
     }
 
     pub fn start(&mut self) {
+        let duration = self.stages[0].duration();
+
+        let slope = if duration > 0.0 {
+            (1.0 - self.current_stage_level) * DT / duration
+        } else {
+            0.0
+        };
+
+        self.stages[0] = EnvelopeState::Attack { slope, duration};
 
         self.current_state_idx = 0;
         self.current_stage_time = 0.0;
-        self.current_stage_level = 0.0;
-        self.gate = false;
+        self.gate = true;
     }
 
     pub fn current_state(&self) -> &EnvelopeState {
@@ -118,11 +126,21 @@ impl ADSREnvelope {
     }
 
     pub fn release(&mut self) {
+
+        if self.current_state_idx >= 3 { return; }
         // Release if not released yet
-        if self.current_state_idx < 3 {
-            self.current_state_idx = 3;
-            self.current_stage_time = 0.0;
-        }
+        let duration = self.stages[3].duration();
+
+        let slope = if duration > 0.0 {
+            -self.current_stage_level * DT / duration
+        } else {
+            0.0
+        };
+
+        self.stages[3] = EnvelopeState::Release { slope, duration};
+        self.current_state_idx = 3;
+        self.current_stage_time = 0.0;
+        self.gate = false;
     }
 
     pub fn apply(&mut self, out: &mut [f32]) {

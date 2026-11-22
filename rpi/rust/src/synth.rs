@@ -30,7 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     s.add_module(Box::new(oscillator));
     // ---------- create envelope
     let envelope = ADSREnvelope::new("Env1",
-        0.05, 0.35, 0.5, 1.0, 0.3, 0.1);
+        0.5, 0.35, 0.5, 1.0, 0.3, 0.1);
     s.add_module(Box::new(envelope));
 
     // let filter = LowPassFilter::new("Filter1", 880.0);
