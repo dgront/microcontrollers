@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fmt;
+use log::debug;
 use crate::modules::{Input, Module, Parameter};
 use crate::settings::{DT};
 
@@ -10,6 +11,26 @@ pub enum EnvelopeState {
     Sustain { slope: f64, duration: f64 },
     Release { slope: f64, duration: f64 },
     Iddle
+}
+
+impl fmt::Display for EnvelopeState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Attack { slope, duration } => {
+                write!(f, "Attack(slope={slope}, duration={duration})")
+            }
+            Self::Decay { slope, duration } => {
+                write!(f, "Decay(slope={slope}, duration={duration})")
+            }
+            Self::Sustain { slope, duration } => {
+                write!(f, "Sustain(slope={slope}, duration={duration})")
+            }
+            Self::Release { slope, duration } => {
+                write!(f, "Release(slope={slope}, duration={duration})")
+            }
+            Self::Iddle => write!(f, "Idle"),
+        }
+    }
 }
 
 impl EnvelopeState {
@@ -97,8 +118,11 @@ impl ADSREnvelope {
     }
 
     pub fn release(&mut self) {
-        self.current_state_idx = 3; // Release
-        self.current_stage_time = 0.0;
+        // Release if not released yet
+        if self.current_state_idx < 3 {
+            self.current_state_idx = 3;
+            self.current_stage_time = 0.0;
+        }
     }
 
     pub fn apply(&mut self, out: &mut [f32]) {
@@ -111,10 +135,16 @@ impl ADSREnvelope {
             out[step] *= self.current_stage_level as f32;
             self.current_stage_time += DT;
             if self.current_stage_time >= current_duration {
-                self.current_state_idx += 1;
+                if self.current_state_idx < self.stages.len() - 1 {
+                    self.current_state_idx += 1;
+                }
+                if self.current_state_idx == self.stages.len() - 1 {
+                    self.current_stage_level = 0.0;
+                }
                 current_duration = self.current_state().duration();
                 current_slope = self.current_state().slope();
                 self.current_stage_time = 0.0;
+                debug!("ADSREnvelope entered {} stage", self.current_state());
             }
             step += 1;
         }
