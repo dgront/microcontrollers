@@ -93,7 +93,7 @@ impl Synthesizer {
                     .get_mut(&step.module_id)
                     .expect("Unknown module in pipeline");
 
-                module.sample(inputs, output);
+                module.sample(&inputs, output);
             }
 
             // Use the output of the last pipeline step.

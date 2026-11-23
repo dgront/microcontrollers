@@ -59,5 +59,5 @@ pub trait Module {
 
     fn name(&self) -> &str;
 
-    fn sample(&mut self, inputs: HashMap<Input, &[f32]>, output: &mut [f32]);
+    fn sample(&mut self, inputs: &HashMap<Input, &[f32]>, output: &mut [f32]);
 }

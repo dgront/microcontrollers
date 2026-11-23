@@ -5,7 +5,7 @@ use crate::settings::SAMPLING_RATE;
 
 macro_rules! filter_sample {
     () => {
-        fn sample(&mut self, inputs: HashMap<Input, &[f32]>, output: &mut [f32]) {
+        fn sample(&mut self, inputs: &HashMap<Input, &[f32]>, output: &mut [f32]) {
             let audio = inputs.get(&Input::AudioIn).expect("Filter requires AudioIn");
 
             output.copy_from_slice(audio);

@@ -48,7 +48,7 @@ impl Module for LFO {
     fn name(&self) -> &str { &self.name }
 
     /// LFO doesn't accept any input at that moment
-    fn sample(&mut self, _inputs: HashMap<Input, &[f32]>, output: &mut [f32]) {
+    fn sample(&mut self, _inputs: &HashMap<Input, &[f32]>, output: &mut [f32]) {
         // ---------- Don't generate sound if the gate is closed
         if self.gate == false {
             output.fill(0.0);

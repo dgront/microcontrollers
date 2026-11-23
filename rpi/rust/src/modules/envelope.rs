@@ -208,7 +208,7 @@ impl Module for ADSREnvelope {
 
     fn name(&self) -> &str { return &self.name; }
 
-    fn sample(&mut self, inputs: HashMap<Input, &[f32]>, output: &mut [f32]) {
+    fn sample(&mut self, inputs: &HashMap<Input, &[f32]>, output: &mut [f32]) {
 
         // ---------- Get the audio input.
         let audio = inputs.get(&Input::AudioIn).expect("Envelope requires AudioIn");
