@@ -6,7 +6,7 @@ use crate::sound::SoundWave;
 pub struct LFO {
     phase: f64,
     frequency: f64,
-    depth: f32,
+    depth: f64,
     gate: bool,
     waveform: SoundWave,
     name: String,
@@ -58,7 +58,7 @@ impl Module for LFO {
         self.waveform.sample(&mut self.phase, self.frequency, output);
         // ---------- Apply depth to the output
         for sample in output.iter_mut() {
-            *sample *= self.depth;
+            *sample *= self.depth as f32;
         }
     }
 }

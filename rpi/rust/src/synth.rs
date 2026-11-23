@@ -6,7 +6,7 @@ mod keyboard;
 mod synthesizer;
 mod sound;
 mod notes;
-
+mod sequencer;
 
 use std::collections::HashMap;
 use devices::Device;
@@ -32,6 +32,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let envelope = ADSREnvelope::new("Env1",
         0.05, 0.35, 0.5, 1.0, 0.3, 0.1);
     s.add_module(Box::new(envelope));
+    // ---------- create chorus effect
+    let chorus = Chorus::new("Chorus");
+    s.add_module(Box::new(chorus));
 
     // let filter = LowPassFilter::new("Filter1", 880.0);
     let filter = BiquadFilter::new("Filter1", 880.0, 0.8);
@@ -43,8 +46,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     s.add_connection("Wave1", HashMap::from([(Input::Frequency, 0)]), 1);
     // ---------- Filter takes audio input from buffer 1 and writes to buffer 2
     s.add_connection("Filter1", HashMap::from([(Input::AudioIn, 1)]), 2);
+    // ---------- Chorus takes audio input from buffer 1 and writes to buffer 2
+    s.add_connection("Chorus", HashMap::from([(Input::AudioIn, 2)]), 3);
     // ---------- Envelope takes audio input from buffer 2 and writes to buffer 3
-    s.add_connection("Env1", HashMap::from([(Input::AudioIn, 2)]), 3);
+    s.add_connection("Env1", HashMap::from([(Input::AudioIn, 3)]), 4);
 
     // ---------- configure keyboard
     let mut keyboard = Keyboard::new(s.sender());

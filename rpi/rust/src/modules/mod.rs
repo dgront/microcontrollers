@@ -11,10 +11,13 @@ mod envelope;
 pub use envelope::*;
 
 mod filters;
+pub use filters::*;
+
 mod unison_oscillator;
 pub use unison_oscillator::*;
 
-pub use filters::*;
+mod chorus;
+pub use chorus::*;
 
 
 /// Calculates the frequency of a note given a base frequency, an octave ratio, and a detune fraction in semitones.

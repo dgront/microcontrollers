@@ -8,8 +8,9 @@ pub enum Parameter {
     Volume(f64),
     Waveform(SoundWave),
     Gate(bool),
-    Depth(f32),
+    Depth(f64),
     Resonance(f64),
+    Mix(f64),
 }
 
 
