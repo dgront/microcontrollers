@@ -94,10 +94,16 @@ impl Keyboard {
 
     fn send_note_on(&self, frequency: f64) {
         for module in &self.frequency_ports {
-            let _ = self.tx.try_send(RtMessage::new(module.clone(), Frequency(frequency)));
+            let ret = self.tx.try_send(RtMessage::new(module.clone(), Frequency(frequency)));
+            if let Err(err) = ret {
+                log::error!("Keyboard failed to send message: {err}");
+            }
         }
         for module in &self.gate_ports {
-            let _ = self.tx.try_send(RtMessage::new(module.clone(), Gate(true)));
+            let ret = self.tx.try_send(RtMessage::new(module.clone(), Gate(true)));
+            if let Err(err) = ret {
+                log::error!("Keyboard failed to send message: {err}");
+            }
         }
     }
 
