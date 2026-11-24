@@ -12,6 +12,7 @@ use std::collections::HashMap;
 use devices::Device;
 use modules::*;
 use crate::keyboard::Keyboard;
+use crate::sequencer::Sequencer;
 use crate::synthesizer::Synthesizer;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -57,9 +58,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     keyboard.connect_gate("Env1");
     std::thread::spawn(move || keyboard.run());     // Spawn a separate thread to run the keyboard input loop.
 
+    // ---------- configure sequencer
+    let mut sequencer = Sequencer::new(s.sender());
+    sequencer.set_steps(vec![
+        (261.63, 0.8), // C4
+        (293.66, 1.0), // D4
+        (329.63, 1.0), // E4
+        (392.00, 0.5), // G4
+        (0.0,    0.0), // Rest
+        (392.00, 0.8), // G4
+        (440.00, 0.8), // A4
+        (523.25, 1.0), // C5
+    ]);
+    sequencer.connect_frequency("Wave1");
+    sequencer.connect_gate("Env1");
+    std::thread::spawn(move || sequencer.run());     // Spawn a separate thread to run the keyboard input loop.
+
+
     s.send_message(RtMessage::new("Wave1", Parameter::Gate(true)));
-    // s.send_message(RtMessage::new("LFO1", Parameter::Gate(true)));
-    s.send_message(RtMessage::new("LFO1", Parameter::Depth(0.02)));
+    s.send_message(RtMessage::new("LFO1", Parameter::Depth(0.2)));
     println!("Synthesizer running. Press Ctrl+C to stop.");
     s.run()?;
 
