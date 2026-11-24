@@ -12,6 +12,7 @@ use std::collections::HashMap;
 use devices::Device;
 use modules::*;
 use crate::keyboard::Keyboard;
+use crate::notes::Note;
 use crate::sequencer::Sequencer;
 use crate::synthesizer::Synthesizer;
 
@@ -61,14 +62,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ---------- configure sequencer
     let mut sequencer = Sequencer::new(s.sender());
     sequencer.set_steps(vec![
-        (261.63, 0.8), // C4
-        (293.66, 1.0), // D4
-        (329.63, 1.0), // E4
-        (392.00, 0.5), // G4
+        (Note::C.octave_frequency(4), 0.8), // C4
+        (Note::D.octave_frequency(4), 1.0), // D4
+        (Note::E.octave_frequency(4), 1.0), // E4
+        (Note::G.octave_frequency(4), 0.5), // G4
         (0.0,    0.0), // Rest
-        (392.00, 0.8), // G4
-        (440.00, 0.8), // A4
-        (523.25, 1.0), // C5
+        (Note::G.octave_frequency(4), 0.8), // G4
+        (Note::A.octave_frequency(4), 0.8), // A4
+        (Note::C.octave_frequency(5), 1.0), // C5
     ]);
     sequencer.connect_frequency("Wave1");
     sequencer.connect_gate("Env1");
