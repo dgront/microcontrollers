@@ -49,9 +49,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ---------- Filter takes audio input from buffer 1 and writes to buffer 2
     s.add_connection("Filter1", HashMap::from([(Input::AudioIn, 1)]), 2);
     // ---------- Chorus takes audio input from buffer 1 and writes to buffer 2
-    s.add_connection("Chorus", HashMap::from([(Input::AudioIn, 2)]), 3);
-    // ---------- Envelope takes audio input from buffer 2 and writes to buffer 3
-    s.add_connection("Env1", HashMap::from([(Input::AudioIn, 3)]), 4);
+    // s.add_connection("Chorus", HashMap::from([(Input::AudioIn, 2)]), 3);
+    // // ---------- Envelope takes audio input from buffer 2 and writes to buffer 3
+    // s.add_connection("Env1", HashMap::from([(Input::AudioIn, 3)]), 4);
+    s.add_connection("Env1", HashMap::from([(Input::AudioIn, 2)]), 3);
 
     // ---------- configure keyboard
     let mut keyboard = Keyboard::new(s.sender());
@@ -71,6 +72,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         (Note::A.octave_frequency(4), 0.8), // A4
         (Note::C.octave_frequency(5), 1.0), // C5
     ]);
+    sequencer.set_bpm(60.0);
     sequencer.connect_frequency("Wave1");
     sequencer.connect_gate("Env1");
     std::thread::spawn(move || sequencer.run());     // Spawn a separate thread to run the keyboard input loop.
