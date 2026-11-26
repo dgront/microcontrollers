@@ -47,6 +47,11 @@ impl Module for LFO {
 
     fn name(&self) -> &str { &self.name }
 
+    /// Fills the ``output`` buffer with a signal sample of this oscillator.
+    ///
+    /// If the gate of this LFO is closed, the buffer is filled with zeros. Otherwise,
+    /// the signal range is `[-depth,+depth]`.
+    ///
     /// LFO doesn't accept any input at that moment
     fn sample(&mut self, _inputs: &HashMap<Input, &[f32]>, output: &mut [f32]) {
         // ---------- Don't generate sound if the gate is closed

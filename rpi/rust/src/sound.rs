@@ -11,16 +11,18 @@ pub enum SoundWave {
 }
 
 impl SoundWave {
-    /// Generate samples at a constant frequency.
+    /// Generate samples at a constant ``frequency``.
     ///
+    /// The generated sample is always in the range ``[-1,1]`` and is stored in the `out` buffer.
     /// `phase` is the current phase of the waveform, which will be updated after generating samples.
-    /// The result is stored in the `out` buffer.
     pub fn sample(&self, phase: &mut f64, frequency: f64, out: &mut [f32]) {
         self.render(phase, frequency, None, out);
     }
 
-    /// Generate samples with additive frequency modulation in Hz.
+    /// Generate samples with additive frequency modulation.
     ///
+    /// The [`voltage_to_frequency()`](voltage_to_frequency) function will be used to convert values
+    /// provided in the ``modulation`` vector into Hz.
     /// `phase` is the current phase of the waveform, which will be updated after generating samples.
     /// The result is stored in the `out` buffer.
     pub fn sample_modulated(&self, phase: &mut f64, frequency: f64, modulation: &[f32], out: &mut [f32]) {
@@ -60,7 +62,7 @@ impl SoundWave {
 
 /// Shared sample generation loop.
 ///
-/// Assumes instantaneous frequencies are nonnegative and lower than SAMPLING_FREQ.
+/// Assumes instantaneous frequencies are non-negative and lower than SAMPLING_FREQ.
 #[inline]
 fn generate<F: Fn(f64) -> f32>(phase: &mut f64, frequency: f64, modulation: Option<&[f32]>,
                                out: &mut [f32], waveform: F) {
@@ -92,8 +94,9 @@ fn generate<F: Fn(f64) -> f32>(phase: &mut f64, frequency: f64, modulation: Opti
     *phase = p;
 }
 
+/// Convert voltage signal into frequency values in ``Hz``
 #[inline]
-fn voltage_to_frequency(base_frequency: f64, voltage: f32) -> f64 {
+pub fn voltage_to_frequency(base_frequency: f64, voltage: f32) -> f64 {
     const OCTAVES_PER_VOLT: f32 = 1.0;
 
     base_frequency * (voltage * OCTAVES_PER_VOLT).exp2() as f64
