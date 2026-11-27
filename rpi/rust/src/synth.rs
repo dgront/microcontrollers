@@ -38,11 +38,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     s.add_module(Box::new(envelope));
 
     // ---------- create chorus effect
-    // let chorus = Chorus::new("Chorus");
-    // s.add_module(Box::new(chorus));
+    let chorus = Chorus::new("Chorus");
+    s.add_module(Box::new(chorus));
 
-    let filter = LowPassFilter::new("Filter1", 600.0);
-    // let filter = BiquadFilter::new("Filter1", 660.0, 0.0);
+    // let filter = LowPassFilter::new("Filter1", 600.0);
+    let filter = BiquadFilter::new("Filter1", 660.0, 1.0);
     s.add_module(Box::new(filter));
 
     // ---------- create amplifier
@@ -58,11 +58,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     s.add_connection("Wave1", HashMap::from([(Input::Frequency, 0)]), 2);
 
     // ---------- Chorus takes audio input from buffer 2 and writes to buffer 3
-    // s.add_connection("Chorus", HashMap::from([(Input::AudioIn, 2)]), 3);
+    s.add_connection("Chorus", HashMap::from([(Input::AudioIn, 2)]), 3);
 
     // ---------- Filter takes audio input from buffer 2 and envelope from buffer 1 and writes to buffer 3
-    s.add_connection("Filter1", HashMap::from([(Input::AudioIn, 2),(Input::Frequency, 1)]), 3);
-    s.add_connection("VCA", HashMap::from([(Input::AudioIn, 3),(Input::Gain, 1)]), 4);
+    s.add_connection("Filter1", HashMap::from([(Input::AudioIn, 3),(Input::Frequency, 1)]), 4);
+    s.add_connection("VCA", HashMap::from([(Input::AudioIn, 4),(Input::Gain, 1)]), 5);
 
     // ---------- configure keyboard
     let mut keyboard = Keyboard::new(s.sender());
@@ -82,7 +82,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         (Note::A.octave_frequency(4), 0.8), // A4
         (Note::C.octave_frequency(5), 1.0), // C5
     ]);
-    sequencer.set_bpm(30.0);
+    sequencer.set_bpm(60.0);
     sequencer.connect_frequency("Filter1");
     sequencer.connect_frequency("Wave1");
     sequencer.connect_gate("Env1");
@@ -93,7 +93,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     s.send_message(RtMessage::new("LFO1", Parameter::Depth(0.01)));
     s.send_message(RtMessage::new("LFO1", Parameter::Frequency(10.0)));
     // s.send_message(RtMessage::new("LFO1", Parameter::Gate(true)));
-    s.send_message(RtMessage::new("Filter1", Parameter::Depth(1.5)));
+    s.send_message(RtMessage::new("Filter1", Parameter::Depth(2.5)));
     println!("Synthesizer running. Press Ctrl+C to stop.");
     s.run()?;
 

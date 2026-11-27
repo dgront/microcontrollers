@@ -122,6 +122,7 @@ impl ADSREnvelope {
             self.current_stage_time = 0.0;
             self.current_stage_level = 0.0;
             self.gate = true;
+            debug!("ADSREnvelope {} started from {}", self.name, self.current_state());
             return;
         }
 
@@ -139,6 +140,7 @@ impl ADSREnvelope {
         self.current_state_idx = retrigger_idx;
         self.current_stage_time = 0.0;
         self.gate = true;
+        debug!("ADSREnvelope {} started from {}", self.name, self.current_state());
     }
 
     pub fn current_state(&self) -> &EnvelopeState {
@@ -146,6 +148,8 @@ impl ADSREnvelope {
     }
 
     pub fn release(&mut self) {
+
+        debug!("ADSREnvelope {} released", self.name);
 
         if self.current_state_idx >= 3 { return; }
         // Release if not released yet
