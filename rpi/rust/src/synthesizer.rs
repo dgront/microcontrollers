@@ -1,4 +1,7 @@
 use std::collections::HashMap;
+use std::fs::OpenOptions;
+use std::io;
+use std::io::{BufWriter, Write};
 use std::sync::mpsc::{sync_channel, Receiver, SyncSender};
 use crate::devices::{AudioResult, Device};
 use crate::modules::{Input, Module, RtMessage};
@@ -108,6 +111,7 @@ impl Synthesizer {
             }
 
             self.device.write(&buffer)?;
+            // self.debug("debug.tsv").unwrap();
         }
     }
 
@@ -115,5 +119,19 @@ impl Synthesizer {
         if let Some(module) = self.modules.get_mut(&message.receiver_module) {
             module.set_parameter(message.value);
         }
+    }
+
+    fn debug(&self, fname: &str) -> io::Result<()> {
+
+        let file = OpenOptions::new().create(true).append(true).open(fname)?;
+        let mut writer = BufWriter::new(file);
+        for i in 0..BUFFER_FRAMES {
+            for (j, buffer) in self.buffers.iter().enumerate() {
+                if j > 0 { write!(writer, "\t")?; }
+                write!(writer, "{}", buffer[i])?;
+            }
+            writeln!(writer)?;
+        }
+        writer.flush()
     }
 }
