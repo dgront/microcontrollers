@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use log::info;
 use crate::modules::{Input, Module, Parameter};
 use crate::settings::SAMPLING_RATE;
 
@@ -9,7 +10,6 @@ macro_rules! filter_sample {
 
             let audio = inputs.get(&Input::AudioIn).expect("Filter requires AudioIn");
             output.copy_from_slice(audio);
-            self.apply(output);
 
             match inputs.get(&Input::Frequency) {
                 Some(freq_input) if !freq_input.is_empty() => {
@@ -45,13 +45,21 @@ pub struct LowPassFilter {
 
 impl LowPassFilter {
     pub fn new(name: impl Into<String>, cutoff: f64) -> Self {
-        let alpha = (1.0 - (-2.0 * std::f64::consts::PI * cutoff / SAMPLING_RATE as f64).exp()) as f32;
 
+        let alpha = Self::evaluate_alpha(cutoff);
         Self { cutoff, depth: 1.0, alpha, previous: 0.0, name: name.into() }
     }
 
     pub fn set_cutoff(&mut self, new_cutoff: f64) {
-        self.alpha = (1.0 - (-2.0 * std::f64::consts::PI * new_cutoff / SAMPLING_RATE as f64).exp()) as f32;
+        self.cutoff = new_cutoff;
+        self.alpha = Self::evaluate_alpha(new_cutoff);
+        info!("Filter {} frequency cutoff set to {} Hz", self.name, self.cutoff);
+    }
+
+    /// Depth controls how much LFO modulation affects the filter cutoff
+    pub fn set_depth(&mut self, depth: f64) {
+        self.depth = depth;
+        info!("Filter {} depth set to {}", self.name, self.depth);
     }
 
     pub fn apply(&mut self, samples: &mut [f32]) {
@@ -82,6 +90,9 @@ impl Module for LowPassFilter {
         match value {
             Parameter::Frequency(frequency) => {
                 self.set_cutoff(frequency);
+            }
+            Parameter::Depth(depth) => {
+                self.set_depth(depth);
             }
             _ => {}
         }
@@ -128,11 +139,13 @@ impl BiquadFilter {
     ///
     pub fn set_depth(&mut self, depth: f64) {
         self.depth = depth;
+        info!("Filter {} depth set to {}", self.name, self.depth);
     }
 
     pub fn set_cutoff(&mut self, cutoff: f64) {
         self.cutoff = cutoff;
         self.update_coefficients(self.cutoff, self.resonance);
+        info!("Filter {} frequency cutoff set to {} Hz", self.name, self.cutoff);
     }
 
     pub fn set_resonance(&mut self, resonance: f64) {
@@ -188,6 +201,9 @@ impl Module for BiquadFilter {
             }
             Parameter::Resonance(resonance) => {
                 self.set_resonance(resonance);
+            }
+            Parameter::Depth(depth) => {
+                self.set_depth(depth);
             }
             _ => {}
         }

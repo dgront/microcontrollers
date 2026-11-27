@@ -170,7 +170,7 @@ impl ADSREnvelope {
         let mut current_duration = self.current_state().duration();
         while step < out.len() {
             self.current_stage_level += current_slope;
-            out[step] *= self.current_stage_level as f32;
+            out[step] = self.current_stage_level as f32;
             self.current_stage_time += DT;
             if self.current_stage_time >= current_duration {
                 if matches!(self.current_state(), EnvelopeState::Retrigger { .. }) {
@@ -208,14 +208,9 @@ impl Module for ADSREnvelope {
 
     fn name(&self) -> &str { return &self.name; }
 
-    fn sample(&mut self, inputs: &HashMap<Input, &[f32]>, output: &mut [f32]) {
+    fn sample(&mut self, _inputs: &HashMap<Input, &[f32]>, output: &mut [f32]) {
 
-        // ---------- Get the audio input.
-        let audio = inputs.get(&Input::AudioIn).expect("Envelope requires AudioIn");
-        // ---------- Copy the input signal into the output buffer.
-        output.copy_from_slice(audio);
-
-        // ---------- Apply the envelope in place.
+        // ---------- Write the envelope signal to the output buffer
         self.apply(output);
     }
 }

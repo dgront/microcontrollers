@@ -19,6 +19,9 @@ pub use unison_oscillator::*;
 mod chorus;
 pub use chorus::*;
 
+mod vca;
+pub use vca::*;
+
 /// Calculates the frequency of a note given a base frequency, an octave ratio, and a detune fraction in semitones.
 pub fn calculate_frequency(f_base: f64, octave_ratio: f64, detune_fraction: f64) -> f64 {
 
